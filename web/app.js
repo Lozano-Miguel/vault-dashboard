@@ -115,6 +115,7 @@
 
   function renderNeofetch() {
     const sys = S.cfg.system || {};
+    $('nf-art').art = (window.VAULT_ART || {}).face;
     setText('nf-title', `root@${S.cfg.host}`);
     for (const key of ['os', 'host', 'kernel', 'cpu']) setText('nf-' + key, sys[key] || 'n/a');
     setText('nf-services', `${S.cfg.services.length} watched`);

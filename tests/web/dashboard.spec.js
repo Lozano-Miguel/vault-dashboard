@@ -98,12 +98,25 @@ test('neofetch panel: identity, no repeated live numbers, every line fits', asyn
   await expect(page.locator('#nf-kernel')).toHaveText('6.1.0-28-amd64');
   await expect(page.locator('#nf-cpu')).toHaveText('i3-7100 (4) @ 3.90GHz');
   await expect(page.locator('#nf-services')).toHaveText('7 watched');
-  await expect(page.locator('#nf-art')).toContainText('X');
-  const overflow = await page.locator('[data-win=neofetch] .nf-line, #nf-art').evaluateAll(
+  const overflow = await page.locator('[data-win=neofetch] .nf-line').evaluateAll(
     els => els.filter(el => el.scrollWidth > el.clientWidth + 1).map(el => el.textContent));
   expect(overflow).toEqual([]);
   const fitsHeight = await page.locator('[data-win=neofetch] .sunken').evaluate(el => el.scrollHeight <= el.clientHeight);
   expect(fitsHeight).toBe(true);
+});
+
+test('neofetch art is drawn as crisp pixels from the braille bitmap', async ({ page }) => {
+  await open(page, scenarios.healthy);
+  await page.waitForTimeout(300);
+  const lit = await page.locator('#nf-art canvas').evaluate(c => {
+    const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+    let on = 0, partial = 0;
+    for (let i = 3; i < d.length; i += 4) { if (d[i] === 255) on++; else if (d[i] > 0) partial++; }
+    return { on, partial, w: c.width, h: c.height };
+  });
+  expect(lit.w).toBeGreaterThan(110);   // big enough to read, not a thumbnail
+  expect(lit.on).toBeGreaterThan(500);   // the drawing is there
+  expect(lit.partial).toBe(0);          // no anti-aliased (blurry) edges
 });
 
 test('TOP.EXE lists the top processes', async ({ page }) => {

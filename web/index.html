@@ -41,9 +41,11 @@
     gap: 6px; align-content: start; align-items: center; }
   .span2 { grid-column: span 2; }
   .term { background: #000; color: #c0c0c0; }
-  .nf-body { padding: 6px 7px; display: flex; gap: 9px; overflow: hidden; }
-  #nf-art { margin: 2px 0 0; font-size: 13px; line-height: 1.05; color: #c8ccd4; flex: none; overflow: hidden; }
-  .nf-info { flex: 1; min-width: 0; font-size: 15px; line-height: 1.12; }
+  .nf-body { padding: 6px 7px; display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 9px; row-gap: 5px;
+    align-content: start; overflow: hidden; }
+  #nf-art-box { width: 119px; height: 130px; }
+  .nf-below { grid-column: 1 / span 2; }
+  .nf-info { min-width: 0; font-size: 15px; line-height: 1.12; }
   .nf-line { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .nf-line b { font-weight: normal; color: #d6e2ff; }
   #nf-title { color: #d6e2ff; }
@@ -106,26 +108,21 @@
   <div class="win" data-win="neofetch" style="left:994px;top:38px;width:270px;height:250px">
     <div class="title"><span class="ico term"></span><span>root@vault: ~</span></div>
     <div class="sunken term nf-body vt">
-      <pre id="nf-art" class="vt">    _.-----._
-  .'  .---.  '.
- / ,,,,,,,,,,, \
-| |  _     _  | |
-| | (o)   (o) |X|
-| |     ,     | |
-| |   '---'   | |
-|  \_________/  |
- \_/         \_/</pre>
+      <div id="nf-art-box"><vault-pixelart id="nf-art" invert="1"></vault-pixelart></div>
       <div class="nf-info">
         <div class="nf-line" id="nf-title">root@vault</div>
         <div class="nf-line">----------</div>
+        <div class="nf-line"><b>Services</b> <span id="nf-services">n/a</span></div>
+        <div class="nf-line"><b>Mode</b> read-only</div>
+        <div class="nf-line"><b>Theme</b> the wired</div>
+        <div class="nf-line"><b>Shell</b> /bin/watch</div>
+        <div class="nf-palette"><span style="background:#d6e2ff"></span><span style="background:#ffaa3e"></span><span style="background:#ec3428"></span><span style="background:#c8ccd4"></span><span style="background:#6f7782"></span><span style="background:#2c3550"></span><span style="background:#3a3f4a"></span><span style="background:#08090b"></span></div>
+      </div>
+      <div class="nf-info nf-below">
         <div class="nf-line"><b>OS</b> <span id="nf-os">n/a</span></div>
         <div class="nf-line"><b>Host</b> <span id="nf-host">n/a</span></div>
         <div class="nf-line"><b>Kernel</b> <span id="nf-kernel">n/a</span></div>
         <div class="nf-line"><b>CPU</b> <span id="nf-cpu">n/a</span></div>
-        <div class="nf-line"><b>Services</b> <span id="nf-services">n/a</span></div>
-        <div class="nf-line"><b>Mode</b> read-only</div>
-        <div class="nf-line"><b>Theme</b> the wired</div>
-        <div class="nf-palette"><span style="background:#d6e2ff"></span><span style="background:#ffaa3e"></span><span style="background:#ec3428"></span><span style="background:#c8ccd4"></span><span style="background:#6f7782"></span><span style="background:#2c3550"></span><span style="background:#3a3f4a"></span><span style="background:#08090b"></span></div>
       </div>
     </div>
   </div>
@@ -149,6 +146,7 @@
   <div class="abs" style="inset:0;pointer-events:none;z-index:10"><vault-crt strength="0.45"></vault-crt></div>
 </div>
 <script src="vault-fx.js"></script>
+<script src="lain-art.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
