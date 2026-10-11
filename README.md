@@ -1,5 +1,7 @@
 # vault-dashboard
 
+![vault-dashboard](docs/img/dashboard.png)
+
 A read-only dashboard for a small home server, styled as a Windows 2000 / *Serial
 Experiments Lain* desktop. The wallpaper is a pixel-art ophanim with one eye per service
 you watch. Healthy services keep their eyes open. A service that goes down closes its eye
