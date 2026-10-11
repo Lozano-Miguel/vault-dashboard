@@ -69,7 +69,7 @@
     lcd.style.color = c.lcd; lcd.style.textShadow = `0 0 10px ${c.lcd}`;
     const out = live.outside_temp;
     setText('outside', na(out) ? 'n/a' : `${Math.round(out)}°C` + (na(t) ? '' : ` · attic gap ${t - out >= 0 ? '+' : ''}${Math.round(t - out)}°`));
-    setText('throttled', `${live.throttle_today} time(s) today`);
+    setText('throttled', na(live.throttle_today) ? 'n/a' : `${live.throttle_today} time(s) today`);
     const bar = $('temp-bar');
     bar.style.width = (na(t) ? 0 : Math.max(0, Math.min(100, ((t - 30) / 60) * 100))) + '%';
     bar.style.setProperty('--tc', c.bar);

@@ -36,6 +36,7 @@ class Sampler:
         self.prev_net = None
         self.last_throttle_raw = None
         self.last_throttle_event = None
+        self.throttle_readable = False  # unknown until a tick reads the counter
         self.throttle_base = 0
         self.window_throttle = 0
         self.ticker = {}
@@ -93,6 +94,7 @@ class Sampler:
         events = []
         with self.lock:
             prev_today = self.throttle_base + self.window_throttle
+            self.throttle_readable = raw_throttle is not None
             if raw_throttle is not None:
                 last = self.last_throttle_raw
                 if last is not None:
@@ -183,7 +185,7 @@ class Sampler:
             live = dict(self.live)
             services = [{"id": sid, "up": st.up, "ms": st.ms, "status": st.status}
                         for sid, st in self.services.items()]
-            throttle_today = self.throttle_base + self.window_throttle
+            throttle_today = self.throttle_base + self.window_throttle if self.throttle_readable else None
             ticker = dict(self.ticker)
         return {
             "ts": int(now),

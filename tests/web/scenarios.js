@@ -13,7 +13,7 @@ const now = Math.floor(Date.now() / 1000);
 
 function live({ temp = 52, outside = 24, cpu = 12, down = [], throttle = 0, nulls = false } = {}) {
   return {
-    ts: now, cpu_temp: nulls ? null : temp, outside_temp: nulls ? null : outside, throttle_today: throttle,
+    ts: now, cpu_temp: nulls ? null : temp, outside_temp: nulls ? null : outside, throttle_today: nulls ? null : throttle,
     cpu_pct: nulls ? null : cpu, load: nulls ? null : [0.42, 0.51, 0.38],
     mem_mb: nulls ? null : [5300, 8090], disk_gb: nulls ? null : [90.1, 235.0],
     boot_time: nulls ? null : now - 23 * 86400, wifi: nulls ? null : { dbm: -58, quality: 72 },

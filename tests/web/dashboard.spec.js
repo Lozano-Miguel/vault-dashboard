@@ -40,7 +40,7 @@ test('sensors missing: n/a everywhere, page keeps working', async ({ page }) => 
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
   await open(page, scenarios.sensors);
-  for (const id of ['#lcd', '#outside', '#cpu-text', '#mem-text', '#disk-text', '#wifi-text', '#net-text', '#uptime'])
+  for (const id of ['#lcd', '#outside', '#throttled', '#cpu-text', '#mem-text', '#disk-text', '#wifi-text', '#net-text', '#uptime'])
     await expect(page.locator(id)).toHaveText('n/a');
   await expect(page.locator('#status-text')).toHaveText('all systems operational');
   expect(errors).toEqual([]);

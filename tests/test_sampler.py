@@ -60,6 +60,16 @@ class SamplerTest(unittest.TestCase):
         self.assertEqual(snap["net"], {"rx_bps": 100000, "tx_bps": 0})
         self.assertEqual(snap["boot_time"], int(self.clock.t - 1000.5))
 
+    def test_throttle_today_is_null_when_counter_unreadable(self):
+        self.assertIsNone(self.sampler.snapshot()["throttle_today"])  # before any reading
+        sys_root = make_tree(self, {k: v for k, v in SYS_FILES.items() if "thermal_throttle" not in k})
+        sampler = Sampler(Config(services=(), host_proc=self.proc, host_sys=sys_root, disk_path=self.proc),
+                          self.store, checker=lambda s: {}, clock=self.clock)
+        sampler.tick_host()
+        self.assertIsNone(sampler.snapshot()["throttle_today"])
+        self.sampler.tick_host()
+        self.assertEqual(self.sampler.snapshot()["throttle_today"], 0)
+
     def test_temperature_crossing_emits_event(self):
         self.sampler.tick_host()
         write(self.sys, "class/thermal/thermal_zone1/temp", "81000\n")
