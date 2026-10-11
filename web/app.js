@@ -1,5 +1,5 @@
 (() => {
-  const STAGE_W = 1280, STAGE_H = 800;
+  const STAGE_W = 1280, STAGE_H = 800, STAGE_MAX_W = 1422; // 1422x800 = 16:9
   const $ = id => document.getElementById(id);
   const S = { cfg: null, lastEventId: null, fails: 0, lastSeen: null, marquee: '', marqueeAt: 0 };
   const LAIN = ['present day, present time', "no matter where you go, everyone's connected", 'close the world, open the next'];
@@ -162,14 +162,21 @@
   }
 
   function fit() {
-    // Height is fixed at 800; the stage widens to the screen's shape (1422 wide on 16:9) so wide
-    // screens fill edge to edge. Narrower than 16:10 (e.g. phones) keeps 1280 and letterboxes.
-    const w = Math.max(STAGE_W, Math.round(STAGE_H * innerWidth / innerHeight));
+    // Height is fixed at 800; the stage widens with the screen's shape up to 16:9 (1422 wide, so
+    // 1920x1080 fills edge to edge). Wider windows keep 1422 and the backdrop's wallpaper fills the
+    // sides; narrower than 16:10 (e.g. phones) keeps 1280 and letterboxes.
+    const w = Math.min(STAGE_MAX_W, Math.max(STAGE_W, Math.round(STAGE_H * innerWidth / innerHeight)));
     const k = Math.min(innerWidth / w, innerHeight / STAGE_H), st = $('vault').style;
     st.width = w + 'px';
     st.transform = `scale(${k})`;
     st.left = (innerWidth - w * k) / 2 + 'px';
     st.top = (innerHeight - STAGE_H * k) / 2 + 'px';
+    $('ticker-bg').style.top = (innerHeight - STAGE_H * k) / 2 / k + 'px';  // lines up with the stage's ticker
+    for (const id of ['backdrop', 'crt']) {  // same pixel scale as the stage, so the wallpaper is seamless
+      const b = $(id).style;
+      b.width = Math.ceil(innerWidth / k) + 1 + 'px'; b.height = Math.ceil(innerHeight / k) + 1 + 'px'; // never a hairline gap
+      b.transform = `scale(${k})`;
+    }
     window.vaultFx.setScale(k);
   }
 

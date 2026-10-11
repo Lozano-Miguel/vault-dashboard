@@ -89,6 +89,30 @@ for (const [w, h] of [[1280, 800], [1920, 1080], [2560, 1080]]) {
   });
 }
 
+test('very wide windows: layout stops at 16:9 and the wallpaper fills the sides', async ({ page }) => {
+  await page.setViewportSize({ width: 1368, height: 633 });   // a short, wide browser window
+  await open(page, scenarios.healthy);
+  const { stageW, wiredW, bg } = await page.evaluate(() => {
+    const st = document.getElementById('vault').getBoundingClientRect(), k = st.height / 800;
+    const wired = document.querySelector('[data-win=wired]').getBoundingClientRect();
+    return { stageW: st.width / k, wiredW: wired.width / k,
+             bg: document.getElementById('backdrop').getBoundingClientRect().toJSON() };
+  });
+  expect(stageW).toBeLessThanOrEqual(1423);   // never wider than 16:9
+  expect(wiredW).toBeLessThanOrEqual(1011);
+  expect(bg.left).toBeLessThanOrEqual(0);      // wallpaper covers the whole window, not black bars
+  expect(bg.width).toBeGreaterThanOrEqual(1368);
+  expect(bg.height).toBeGreaterThanOrEqual(633);
+  const strip = await page.evaluate(() => {
+    const s = document.getElementById('ticker-bg').getBoundingClientRect(), t = document.getElementById('ticker').getBoundingClientRect();
+    return { left: s.left, width: s.width, dTop: Math.abs(s.top - t.top), dH: Math.abs(s.height - t.height) };
+  });
+  expect(strip.left).toBeLessThanOrEqual(0);              // the ticker's dark strip spans the whole window
+  expect(strip.width).toBeGreaterThanOrEqual(1368);
+  expect(strip.dTop).toBeLessThanOrEqual(1);              // and lines up with the ticker text
+  expect(strip.dH).toBeLessThanOrEqual(1.5);
+});
+
 test('fills a 1920x1080 screen edge to edge, no side bars', async ({ page }) => {
   await page.setViewportSize({ width: 1920, height: 1080 });
   await open(page, scenarios.healthy);
@@ -148,7 +172,7 @@ test('ticker adds process count and lain lines', async ({ page }) => {
   await expect(page.locator('#marquee')).toHaveAttribute('text', /close the world, open the next/);
 });
 
-for (const [w, h] of [[1280, 800], [1920, 1080], [1366, 768], [390, 844]]) {
+for (const [w, h] of [[1280, 800], [1920, 1080], [1366, 768], [1368, 633], [390, 844]]) {
   test(`scales crisply at ${w}x${h}`, async ({ page }) => {
     await page.setViewportSize({ width: w, height: h });
     await open(page, scenarios.degraded);

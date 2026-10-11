@@ -9,7 +9,10 @@
 <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 <style>
   html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
-  #vault { position: absolute; left: 0; top: 0; width: 1280px; height: 800px; overflow: hidden; background: #0b0c0e;
+  #backdrop, #crt { position: fixed; left: 0; top: 0; width: 100%; height: 100%; transform-origin: 0 0; }
+  #backdrop { background: #0b0c0e; }
+  #crt { pointer-events: none; z-index: 10; }
+  #vault { position: absolute; left: 0; top: 0; width: 1280px; height: 800px; overflow: hidden; z-index: 1;
     font: 11px Tahoma, Verdana, 'Segoe UI', sans-serif; color: #000; transform-origin: 0 0; }
   .abs { position: absolute; }
   .vt { font-family: 'VT323', monospace; }
@@ -27,7 +30,10 @@
   .bar { height: 11px; padding: 2px; border: 1px solid; border-color: #808080 #fff #fff #808080; }
   .bar > div { height: 100%; width: 0; background: repeating-linear-gradient(90deg, #2c3550 0 6px, transparent 6px 8px); }
   #ticker { left: 0; right: 0; top: 0; height: 24px; display: flex; align-items: center; gap: 14px; padding: 0 10px;
-    background: rgba(0,0,0,.82); border-bottom: 1px solid #2a2e36; font-size: 19px; color: #aab0ba; z-index: 2; }
+    font-size: 19px; color: #aab0ba; z-index: 2; }
+  /* the ticker's strip lives in the backdrop so it spans the whole window, not just the stage */
+  #ticker-bg { position: absolute; left: 0; right: 0; top: 0; height: 24px; background: rgba(0,0,0,.82);
+    border-bottom: 1px solid #2a2e36; box-sizing: content-box; z-index: 1; }
   #status { flex: none; display: flex; align-items: center; gap: 7px; color: #e9eef2; }
   #status-dot { width: 9px; height: 9px; background: currentColor; }
   .thermal-body { flex: 1; padding: 7px 6px 4px; display: flex; flex-direction: column; gap: 7px; }
@@ -63,8 +69,8 @@
 </style>
 </head>
 <body>
+<div id="backdrop"><vault-wallpaper></vault-wallpaper><div id="ticker-bg"></div></div>
 <div id="vault">
-  <div class="abs" style="inset:0"><vault-wallpaper></vault-wallpaper></div>
   <div class="abs" style="left:calc(50% - 410px);top:0;width:900px;height:664px">
     <vault-ophanim id="angel" variant="pixel" px="3" labels="down"></vault-ophanim>
   </div>
@@ -143,8 +149,8 @@
     </div>
   </div>
 
-  <div class="abs" style="inset:0;pointer-events:none;z-index:10"><vault-crt strength="0.45"></vault-crt></div>
 </div>
+<div id="crt"><vault-crt strength="0.45"></vault-crt></div>
 <script src="vault-fx.js"></script>
 <script src="lain-art.js"></script>
 <script src="app.js"></script>
