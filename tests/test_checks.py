@@ -76,6 +76,28 @@ class ChecksTest(unittest.TestCase):
         r = check(f"tcp://127.0.0.1:{port}", timeout=1)
         self.assertEqual((r.ok, r.status), (False, "refused"))
 
+    def test_non_http_reply_is_down_and_does_not_sink_the_batch(self):
+        listener = socket.socket()
+        listener.bind(("127.0.0.1", 0))
+        listener.listen()
+        self.addCleanup(listener.close)
+
+        def answer_garbage():
+            conn, _ = listener.accept()
+            conn.recv(1024)
+            conn.sendall(b"garbage not http\r\n\r\n")
+            conn.close()
+
+        threading.Thread(target=answer_garbage, daemon=True).start()
+        garbage = f"http://127.0.0.1:{listener.getsockname()[1]}/"
+        results = run_checks([Service("weird", garbage), Service("ok", self.base + "/ok")], timeout=2)
+        self.assertEqual((results["weird"].ok, results["weird"].status), (False, "error"))
+        self.assertTrue(results["ok"].ok)
+
+    def test_invalid_url_is_down(self):
+        r = check("http://127.0.0.1:abc/", timeout=1)
+        self.assertEqual((r.ok, r.status), (False, "error"))
+
     def test_run_checks_is_parallel_and_keyed_by_id(self):
         services = [Service(f"s{i}", self.base + "/slow") for i in range(3)]
         t0 = time.monotonic()

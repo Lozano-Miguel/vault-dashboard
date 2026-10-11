@@ -1,5 +1,6 @@
 """Service probes. HTTP: any status < 500 means the service is answering (redirects are not
 followed). TCP: an accepted connection means up."""
+import http.client
 import socket
 import time
 import urllib.error
@@ -46,6 +47,8 @@ def check_http(url, timeout=5.0):
         e.close()
     except (urllib.error.URLError, OSError) as e:
         return CheckResult(False, None, _failure(getattr(e, "reason", e)))
+    except (http.client.HTTPException, ValueError):  # non-HTTP reply, bad URL
+        return CheckResult(False, None, "error")
     ok = code < 500
     return CheckResult(ok, _elapsed_ms(t0) if ok else None, str(code))
 
@@ -70,4 +73,11 @@ def run_checks(services, timeout=5.0):
         return {}
     with ThreadPoolExecutor(max_workers=len(services)) as pool:
         futures = {s.id: pool.submit(check, s.check, timeout) for s in services}
-        return {sid: f.result() for sid, f in futures.items()}
+        return {sid: _result(f) for sid, f in futures.items()}
+
+
+def _result(future):
+    try:
+        return future.result()
+    except Exception:  # one broken probe must never stop the others from being reported
+        return CheckResult(False, None, "error")
