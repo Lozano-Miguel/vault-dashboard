@@ -162,9 +162,13 @@
   }
 
   function fit() {
-    const k = Math.min(innerWidth / STAGE_W, innerHeight / STAGE_H), st = $('vault').style;
+    // Height is fixed at 800; the stage widens to the screen's shape (1422 wide on 16:9) so wide
+    // screens fill edge to edge. Narrower than 16:10 (e.g. phones) keeps 1280 and letterboxes.
+    const w = Math.max(STAGE_W, Math.round(STAGE_H * innerWidth / innerHeight));
+    const k = Math.min(innerWidth / w, innerHeight / STAGE_H), st = $('vault').style;
+    st.width = w + 'px';
     st.transform = `scale(${k})`;
-    st.left = (innerWidth - STAGE_W * k) / 2 + 'px';
+    st.left = (innerWidth - w * k) / 2 + 'px';
     st.top = (innerHeight - STAGE_H * k) / 2 + 'px';
     window.vaultFx.setScale(k);
   }

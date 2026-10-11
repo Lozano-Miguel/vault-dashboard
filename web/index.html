@@ -65,7 +65,7 @@
 <body>
 <div id="vault">
   <div class="abs" style="inset:0"><vault-wallpaper></vault-wallpaper></div>
-  <div class="abs" style="left:230px;top:0;width:900px;height:664px">
+  <div class="abs" style="left:calc(50% - 410px);top:0;width:900px;height:664px">
     <vault-ophanim id="angel" variant="pixel" px="3" labels="down"></vault-ophanim>
   </div>
 
@@ -98,14 +98,14 @@
     </div>
   </div>
 
-  <div class="win" data-win="wired" style="left:16px;top:590px;width:868px;height:196px">
+  <div class="win" data-win="wired" style="left:16px;top:590px;width:calc(100% - 412px);height:196px">
     <div class="title"><span class="ico"></span><span>WIRED.LNK</span></div>
     <div class="sunken" style="background:#000">
       <div class="abs" style="inset:2px"><vault-wired id="wired" variant="pixel" color="#c8ccd4"></vault-wired></div>
     </div>
   </div>
 
-  <div class="win" data-win="neofetch" style="left:994px;top:38px;width:270px;height:250px">
+  <div class="win" data-win="neofetch" style="right:16px;top:38px;width:270px;height:250px">
     <div class="title"><span class="ico term"></span><span>root@vault: ~</span></div>
     <div class="sunken term nf-body vt">
       <div id="nf-art-box"><vault-pixelart id="nf-art" invert="1"></vault-pixelart></div>
@@ -127,7 +127,7 @@
     </div>
   </div>
 
-  <div class="win" data-win="top" style="left:994px;top:298px;width:270px;height:232px">
+  <div class="win" data-win="top" style="right:16px;top:298px;width:270px;height:232px">
     <div class="title"><span class="ico"></span><span>TOP.EXE</span></div>
     <div class="sunken list">
       <div class="list-row list-head" style="flex:none"><span>Process</span><span class="num">CPU</span><span class="num">Mem</span></div>
@@ -135,7 +135,7 @@
     </div>
   </div>
 
-  <div class="win" data-win="cmd" style="left:900px;top:540px;width:364px;height:246px">
+  <div class="win" data-win="cmd" style="right:16px;top:540px;width:364px;height:246px">
     <div class="title active"><span class="ico term"></span><span>cmd.exe · vault --tail</span></div>
     <div class="sunken term-body vt">
       <div style="flex:none;margin-bottom:4px">C:\VAULT&gt; tail -f events.log</div>

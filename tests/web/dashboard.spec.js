@@ -61,28 +61,40 @@ test('signal lost: keeps values, turns amber, recovers', async ({ page }) => {
   await expect(page.locator('#status-text')).toHaveText('all systems operational', { timeout: 5000 });
 });
 
-test('layout: no window covers the wheel or any label position', async ({ page }) => {
-  await open(page, scenarios.alldown);
-  await page.waitForTimeout(500);
-  const result = await page.evaluate(() => {
-    const stage = document.getElementById('vault').getBoundingClientRect();
-    const k = stage.width / 1280;
-    const angel = document.getElementById('angel'), a = angel.getBoundingClientRect();
-    const ox = (a.left - stage.left) / k, oy = (a.top - stage.top) / k;
-    const boxes = angel.labelBoxes(72).map(b => ({ ...b, x: b.x + ox, y: b.y + oy }));
-    const wins = [...document.querySelectorAll('.win')].map(w => {
-      const r = w.getBoundingClientRect();
-      return { name: w.dataset.win, x: (r.left - stage.left) / k, y: (r.top - stage.top) / k, w: r.width / k, h: r.height / k };
+for (const [w, h] of [[1280, 800], [1920, 1080], [2560, 1080]]) {
+  test(`layout at ${w}x${h}: windows clear of the wheel, labels and each other`, async ({ page }) => {
+    await page.setViewportSize({ width: w, height: h });
+    await open(page, scenarios.alldown);
+    await page.waitForTimeout(500);
+    const result = await page.evaluate(() => {
+      const stage = document.getElementById('vault').getBoundingClientRect();
+      const k = stage.height / 800, W = stage.width / k;
+      const angel = document.getElementById('angel'), a = angel.getBoundingClientRect();
+      const ox = (a.left - stage.left) / k, oy = (a.top - stage.top) / k;
+      const boxes = angel.labelBoxes(72).map(b => ({ ...b, x: b.x + ox, y: b.y + oy }));
+      const wins = [...document.querySelectorAll('.win')].map(el => {
+        const r = el.getBoundingClientRect();
+        return { name: el.dataset.win, x: (r.left - stage.left) / k, y: (r.top - stage.top) / k, w: r.width / k, h: r.height / k };
+      });
+      const hit = (p, q) => p.x < q.x + q.w && q.x < p.x + p.w && p.y < q.y + q.h && q.y < p.y + p.h;
+      const overlaps = [];
+      for (const b of boxes) for (const win of wins) if (hit(b, win)) overlaps.push(`${b.kind} @${Math.round(b.x)},${Math.round(b.y)} under ${win.name}`);
+      wins.forEach((p, i) => wins.slice(i + 1).forEach(q => { if (hit(p, q)) overlaps.push(`${p.name} overlaps ${q.name}`); }));
+      const outside = [...boxes, ...wins].filter(b => b.y < 24 || b.y + b.h > 800 || b.x < 0 || b.x + b.w > W + 0.5).length;
+      return { overlaps: [...new Set(overlaps)].slice(0, 10), outside, count: boxes.length };
     });
-    const hit = (p, q) => p.x < q.x + q.w && q.x < p.x + p.w && p.y < q.y + q.h && q.y < p.y + p.h;
-    const overlaps = [];
-    for (const b of boxes) for (const w of wins) if (hit(b, w)) overlaps.push(`${b.kind} @${Math.round(b.x)},${Math.round(b.y)} under ${w.name}`);
-    const outside = boxes.filter(b => b.y < 24 || b.y + b.h > 800 || b.x < 0 || b.x + b.w > 1280).length;
-    return { overlaps: [...new Set(overlaps)].slice(0, 10), outside, count: boxes.length };
+    expect(result.count).toBeGreaterThan(0);
+    expect(result.overlaps).toEqual([]);
+    expect(result.outside).toBe(0);
   });
-  expect(result.count).toBeGreaterThan(0);
-  expect(result.overlaps).toEqual([]);
-  expect(result.outside).toBe(0);
+}
+
+test('fills a 1920x1080 screen edge to edge, no side bars', async ({ page }) => {
+  await page.setViewportSize({ width: 1920, height: 1080 });
+  await open(page, scenarios.healthy);
+  const r = await page.locator('#vault').evaluate(el => el.getBoundingClientRect().toJSON());
+  expect(r.width).toBeGreaterThanOrEqual(1915);
+  expect(r.height).toBeGreaterThanOrEqual(1075);
 });
 
 test('readme window is gone', async ({ page }) => {
