@@ -22,7 +22,7 @@ PAGE_KB = os.sysconf("SC_PAGE_SIZE") // 1024
 
 class Sampler:
     HOST_INTERVAL_S = 3
-    WEATHER_INTERVAL_S = 1800
+    WEATHER_INTERVAL_S = 120  # how often to check; Weather.due() decides whether to fetch
     PRUNE_INTERVAL_S = 86400
 
     def __init__(self, cfg, store, *, checker=run_checks, weather=None, clock=time.time):
@@ -148,7 +148,9 @@ class Sampler:
         self._emit(events, now)
 
     def tick_weather(self):
-        self.weather.refresh(self.clock())
+        now = self.clock()
+        if self.weather.due(now):
+            self.weather.refresh(now)
 
     def tick_history(self):
         now = int(self.clock())

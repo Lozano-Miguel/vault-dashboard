@@ -90,6 +90,18 @@ class SamplerTest(unittest.TestCase):
         self.assertEqual([(p["name"], p["cpu"]) for p in snap["top"][:2]], [("node", 100.0), ("postgres", 20.0)])
         self.assertGreater(snap["top"][0]["mem"], 0)
 
+    def test_weather_retries_soon_after_a_failed_first_fetch(self):
+        values = iter([None, 21.0])
+        sampler = Sampler(self.cfg, self.store, checker=lambda s: {},
+                          weather=Weather(1, 2, fetch=lambda lat, lon: next(values)), clock=self.clock)
+        self.assertLessEqual(sampler.WEATHER_INTERVAL_S, 120)  # the loop wakes up often...
+        sampler.tick_weather()                                 # ...first fetch fails
+        self.clock.t += sampler.WEATHER_INTERVAL_S
+        sampler.tick_weather()                                 # retried on the next wake-up
+        self.assertEqual(sampler.snapshot()["outside_temp"], 21.0)
+        self.clock.t += sampler.WEATHER_INTERVAL_S
+        sampler.tick_weather()                                 # not due: no fetch (iterator would raise)
+
     def test_temperature_crossing_emits_event(self):
         self.sampler.tick_host()
         write(self.sys, "class/thermal/thermal_zone1/temp", "81000\n")

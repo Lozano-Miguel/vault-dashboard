@@ -3,6 +3,7 @@ import json
 import urllib.request
 
 URL = "https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m"
+REFRESH_S = 1800          # after a successful fetch
 STALE_AFTER_S = 3 * 3600
 
 
@@ -25,6 +26,11 @@ class Weather:
     @property
     def enabled(self):
         return self.lat is not None and self.lon is not None
+
+    def due(self, now):
+        # Until a fetch succeeds (e.g. the network wasn't up yet at container start) it stays due,
+        # so the caller's short loop retries it instead of waiting a whole refresh interval.
+        return self.enabled and (self.at is None or now - self.at >= REFRESH_S)
 
     def refresh(self, now):
         if not self.enabled:

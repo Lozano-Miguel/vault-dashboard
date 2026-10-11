@@ -2,7 +2,7 @@ import io
 import json
 import unittest
 
-from vault_dashboard.weather import STALE_AFTER_S, Weather, fetch_outside_temp
+from vault_dashboard.weather import REFRESH_S, STALE_AFTER_S, Weather, fetch_outside_temp
 
 
 def opener_returning(body):
@@ -41,6 +41,22 @@ class WeatherTest(unittest.TestCase):
         w.refresh(2000)  # failed fetch keeps 25.0
         self.assertEqual(w.current(2000), 25.0)
         self.assertIsNone(w.current(1000 + STALE_AFTER_S + 1))
+
+
+    def test_due_until_a_fetch_succeeds_then_every_refresh_interval(self):
+        values = iter([None, None, 19.0])
+        w = Weather(1, 2, fetch=lambda lat, lon: next(values))
+        self.assertTrue(w.due(0))
+        w.refresh(0)                       # fails (network not ready at startup)
+        self.assertTrue(w.due(120))        # so it is due again right away
+        w.refresh(120)                     # fails again
+        w.refresh(240)                     # succeeds
+        self.assertEqual(w.current(240), 19.0)
+        self.assertFalse(w.due(240 + 120))
+        self.assertTrue(w.due(240 + REFRESH_S))
+
+    def test_never_due_without_coordinates(self):
+        self.assertFalse(Weather(None, None).due(0))
 
 
 if __name__ == "__main__":
