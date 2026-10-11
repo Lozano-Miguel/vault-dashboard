@@ -1,0 +1,14 @@
+{
+  "host": "vault",
+  "network": "homelab",
+  "services": [
+    { "id": "obilhete",         "check": "http://obilhete:3000/" },
+    { "id": "noticias-pt",      "check": "http://noticias-pt:3000/" },
+    { "id": "obilhete-scraper", "check": "http://obilhete-scraper:8001/" },
+    { "id": "npm",              "check": "http://npm:80/" },
+    { "id": "postgres",         "check": "tcp://postgres:5432" },
+    { "id": "obilhete.pt",      "check": "https://obilhete.pt/",    "parent": "obilhete" },
+    { "id": "noticias-pt.me",   "check": "https://noticias-pt.me/", "parent": "noticias-pt" }
+  ],
+  "readme": "vault\n=====\nold lenovo mini-pc in my attic, portugal.\nruns obilhete.pt and noticias-pt.me.\n\nthis page only watches it.\nit can't restart or touch anything.\n\nsummer afternoons are the bad part."
+}
