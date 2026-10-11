@@ -28,7 +28,6 @@ class Config:
     services: tuple[Service, ...]
     host: str = "vault"
     network: str = "homelab"
-    readme: str = ""
     port: int = 8080
     tz: str = "Europe/Lisbon"
     temp_warn_c: float = 70.0
@@ -41,6 +40,7 @@ class Config:
     wifi_weak_dbm: int = -75
     host_proc: str = "/host/proc"
     host_sys: str = "/sys"
+    os_release: str = "/host/os-release"
     thermal_zone: str = "auto"
     disk_path: str = "/data"
     data_dir: str = "/data"
@@ -127,7 +127,6 @@ def load_config(env=None):
         services=parse_services(data),
         host=str(data.get("host") or "vault"),
         network=str(data.get("network") or "homelab"),
-        readme=str(data.get("readme") or ""),
         port=_num(env, "PORT", 8080, int, 0),
         tz=tz,
         temp_warn_c=warn,
@@ -140,6 +139,7 @@ def load_config(env=None):
         wifi_weak_dbm=_num(env, "WIFI_WEAK_DBM", -75, int),
         host_proc=_str(env, "HOST_PROC", "/host/proc"),
         host_sys=_str(env, "HOST_SYS", "/sys"),
+        os_release=_str(env, "OS_RELEASE", "/host/os-release"),
         thermal_zone=_str(env, "THERMAL_ZONE", "auto"),
         disk_path=_str(env, "DISK_PATH", "/data"),
         data_dir=_str(env, "DATA_DIR", "/data"),

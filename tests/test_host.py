@@ -1,6 +1,8 @@
 import unittest
 
-from tests.fixtures import PROC_FILES, PROC_STAT_2, SYS_FILES
+from tests.fixtures import (
+    CPUINFO, OS_RELEASE, PROC_FILES, PROC_STAT_2, PROCESS_FILES_1, PROCESS_FILES_2, SYS_FILES,
+)
 from tests.helpers import make_tree
 from vault_dashboard import host
 
@@ -77,6 +79,64 @@ class HostReadersTest(unittest.TestCase):
         self.assertIsNone(host.read_meminfo(junk))
         self.assertIsNone(host.read_loadavg(junk))
         self.assertIsNone(host.read_boot_time(junk, now=1.0))
+
+
+class SystemInfoTest(unittest.TestCase):
+    def test_reads_os_host_kernel_cpu(self):
+        proc = make_tree(self, {"cpuinfo": CPUINFO, "sys/kernel/osrelease": "6.1.0-28-amd64\n"})
+        sys_root = make_tree(self, {"class/dmi/id/product_version": "ThinkCentre M710q\n",
+                                    "class/dmi/id/product_name": "10MQS0Q400\n"})
+        etc = make_tree(self, {"os-release": OS_RELEASE})
+        self.assertEqual(host.read_system_info(proc, sys_root, etc + "/os-release"), {
+            "os": "Debian 12 (bookworm)", "host": "ThinkCentre M710q",
+            "kernel": "6.1.0-28-amd64", "cpu": "i3-7100 (4) @ 3.90GHz"})
+
+    def test_junk_product_version_falls_back_to_product_name(self):
+        sys_root = make_tree(self, {"class/dmi/id/product_version": "To be filled by O.E.M.\n",
+                                    "class/dmi/id/product_name": "OptiPlex 3050\n"})
+        self.assertEqual(host.read_system_info("/nonexistent", sys_root, "/nonexistent")["host"], "OptiPlex 3050")
+
+    def test_amd_cpu_name(self):
+        cpuinfo = "processor\t: 0\nmodel name\t: AMD Ryzen 5 3600 6-Core Processor\n\n" * 1
+        proc = make_tree(self, {"cpuinfo": cpuinfo})
+        self.assertEqual(host.read_system_info(proc, "/nonexistent", "/nonexistent")["cpu"], "Ryzen 5 3600 6-Core (1)")
+
+    def test_everything_missing_is_none(self):
+        self.assertEqual(host.read_system_info("/nonexistent", "/nonexistent", "/nonexistent"),
+                         {"os": None, "host": None, "kernel": None, "cpu": None})
+
+
+class ProcessesTest(unittest.TestCase):
+    def test_read_processes_parses_names_with_spaces_and_skips_non_pids(self):
+        procs = host.read_processes(make_tree(self, PROCESS_FILES_1))
+        self.assertEqual(procs, {100: ("node", 1500, 25600), 101: ("postgres", 400, 5120),
+                                 102: ("postgres", 300, 5120), 103: ("tmux: server", 15, 256)})
+
+    def test_name_with_parenthesis(self):
+        procs = host.read_processes(make_tree(self, {"7/stat": "7 (a) b) S 1 7 7 0 -1 0 0 0 0 0 9 1 0 0 20 0 1 0 1 1 4 0\n"}))
+        self.assertEqual(procs, {7: ("a) b", 10, 4)})
+
+    def test_vanished_or_garbled_processes_are_skipped(self):
+        procs = host.read_processes(make_tree(self, {"5/stat": "", "6/stat": "6 (x) S 1\n", "8/stat": "garbage"}))
+        self.assertEqual(procs, {})
+        self.assertIsNone(host.read_processes("/nonexistent"))
+
+    def test_top_processes_groups_by_name_and_ranks_by_cpu(self):
+        prev = host.read_processes(make_tree(self, PROCESS_FILES_1))
+        cur = host.read_processes(make_tree(self, PROCESS_FILES_2))
+        top = host.top_processes(prev, cur, total_delta=800, mem_total_kb=8_000_000, page_kb=4)
+        self.assertEqual(top, [
+            {"name": "node", "count": 1, "cpu": 25.0, "mem": 1.3},
+            {"name": "postgres", "count": 1, "cpu": 5.0, "mem": 0.3},
+            {"name": "python3", "count": 1, "cpu": 0.0, "mem": 0.1},
+            {"name": "tmux: server", "count": 1, "cpu": 0.0, "mem": 0.0},
+        ])
+
+    def test_top_processes_first_sample_ranks_by_memory_and_limits(self):
+        cur = host.read_processes(make_tree(self, PROCESS_FILES_1))
+        top = host.top_processes(None, cur, total_delta=None, mem_total_kb=8_000_000, page_kb=4, n=2)
+        self.assertEqual(top, [{"name": "node", "count": 1, "cpu": 0.0, "mem": 1.3},
+                               {"name": "postgres", "count": 2, "cpu": 0.0, "mem": 0.5}])
 
 
 if __name__ == "__main__":

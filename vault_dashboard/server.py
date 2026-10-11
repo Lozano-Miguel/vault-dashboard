@@ -4,6 +4,8 @@ import os
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, unquote, urlsplit
 
+from . import host
+
 TYPES = {
     ".html": "text/html; charset=utf-8",
     ".js": "text/javascript; charset=utf-8",
@@ -22,7 +24,7 @@ def public_config(cfg):
         "thresholds": {"warn": cfg.temp_warn_c, "danger": cfg.temp_danger_c},
         "poll_ms": cfg.poll_ms,
         "tz": cfg.tz,
-        "readme": cfg.readme,
+        "system": host.read_system_info(cfg.host_proc, cfg.host_sys, cfg.os_release),
     }
 
 

@@ -1,6 +1,6 @@
 import unittest
 
-from tests.fixtures import PROC_FILES, PROC_STAT_2, SYS_FILES
+from tests.fixtures import PROC_FILES, PROC_STAT_2, PROCESS_FILES_1, PROCESS_FILES_2, SYS_FILES
 from tests.helpers import make_tree, write
 from vault_dashboard.checks import CheckResult
 from vault_dashboard.config import Config, Service
@@ -41,7 +41,10 @@ class SamplerTest(unittest.TestCase):
     def test_snapshot_shape_before_any_tick(self):
         snap = self.sampler.snapshot()
         self.assertEqual(set(snap), {"ts", "cpu_temp", "outside_temp", "throttle_today", "cpu_pct", "load",
-                                     "mem_mb", "disk_gb", "boot_time", "wifi", "net", "services", "ticker"})
+                                     "mem_mb", "disk_gb", "boot_time", "wifi", "net", "services", "ticker",
+                                     "top", "procs"})
+        self.assertIsNone(snap["top"])
+        self.assertIsNone(snap["procs"])
         self.assertEqual(snap["services"], [{"id": "app", "up": None, "ms": None, "status": ""},
                                             {"id": "app.example", "up": None, "ms": None, "status": ""}])
 
@@ -69,6 +72,23 @@ class SamplerTest(unittest.TestCase):
         self.assertIsNone(sampler.snapshot()["throttle_today"])
         self.sampler.tick_host()
         self.assertEqual(self.sampler.snapshot()["throttle_today"], 0)
+
+    def test_top_processes_between_ticks(self):
+        for rel, content in PROCESS_FILES_1.items():
+            write(self.proc, rel, content)
+        self.sampler.tick_host()
+        first = self.sampler.snapshot()
+        self.assertEqual(first["procs"], 4)
+        self.assertEqual(first["top"][0]["name"], "node")  # first sample: ranked by memory
+        write(self.proc, "102/stat", "")                    # postgres 102 exited
+        for rel, content in PROCESS_FILES_2.items():
+            write(self.proc, rel, content)
+        write(self.proc, "stat", PROC_STAT_2)               # 200 jiffies passed machine-wide
+        self.sampler.tick_host()
+        snap = self.sampler.snapshot()
+        self.assertEqual(snap["procs"], 4)
+        self.assertEqual([(p["name"], p["cpu"]) for p in snap["top"][:2]], [("node", 100.0), ("postgres", 20.0)])
+        self.assertGreater(snap["top"][0]["mem"], 0)
 
     def test_temperature_crossing_emits_event(self):
         self.sampler.tick_host()
