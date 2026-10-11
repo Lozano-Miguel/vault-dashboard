@@ -21,7 +21,8 @@ cp .env.example .env              # set WIFI_IFACE, optionally LATITUDE/LONGITUD
 cp vault.example.json vault.json  # list your services
 docker build -t vault-dashboard .
 docker run -d --name vault-dashboard --env-file .env \
-  -v /proc:/host/proc:ro -v "$PWD/data:/data" -v "$PWD/vault.json:/config/vault.json:ro" \
+  -v /proc:/host/proc:ro -v /etc/os-release:/host/os-release:ro \
+  -v "$PWD/data:/data" -v "$PWD/vault.json:/config/vault.json:ro" \
   --network <your-docker-network> -p 8080:8080 vault-dashboard
 ```
 

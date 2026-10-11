@@ -40,7 +40,22 @@
   .system-body { flex: 1; padding: 8px 6px 4px; display: grid; grid-template-columns: 44px minmax(0, 1fr) 66px;
     gap: 6px; align-content: start; align-items: center; }
   .span2 { grid-column: span 2; }
-  #readme { background: #fff; padding: 4px 6px; font-size: 17px; line-height: 1.1; white-space: pre-wrap; overflow: hidden; }
+  .term { background: #000; color: #c0c0c0; }
+  .nf-body { padding: 6px 7px; display: flex; gap: 9px; overflow: hidden; }
+  #nf-art { margin: 2px 0 0; font-size: 13px; line-height: 1.05; color: #c8ccd4; flex: none; overflow: hidden; }
+  .nf-info { flex: 1; min-width: 0; font-size: 15px; line-height: 1.12; }
+  .nf-line { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .nf-line b { font-weight: normal; color: #d6e2ff; }
+  #nf-title { color: #d6e2ff; }
+  .nf-palette { display: flex; gap: 0; margin-top: 6px; }
+  .nf-palette span { width: 14px; height: 9px; }
+  .list { background: #000; display: flex; flex-direction: column; }
+  .list-row { display: grid; grid-template-columns: minmax(0, 1fr) 54px 50px; align-items: center; }
+  .list-head span { padding: 2px 5px; background: #d4d0c8; border: 1px solid; border-color: #fff #808080 #808080 #fff; }
+  #top-rows { flex: 1; min-height: 0; overflow: hidden; font-size: 17px; line-height: 1.3; color: #d0d0d0; }
+  #top-rows span { padding: 0 5px; white-space: nowrap; overflow: hidden; }
+  .num { text-align: right; }
+  .dim { opacity: .5; }
   .term-body { background: #000; padding: 4px 7px; display: flex; flex-direction: column; font-size: 18px;
     line-height: 1.08; color: #c0c0c0; }
 </style>
@@ -88,9 +103,39 @@
     </div>
   </div>
 
-  <div class="win" data-win="readme" style="left:1004px;top:38px;width:260px;height:290px">
-    <div class="title"><span class="ico paper"></span><span>README.TXT - Notepad</span></div>
-    <div id="readme" class="sunken vt"></div>
+  <div class="win" data-win="neofetch" style="left:994px;top:38px;width:270px;height:250px">
+    <div class="title"><span class="ico term"></span><span>root@vault: ~</span></div>
+    <div class="sunken term nf-body vt">
+      <pre id="nf-art" class="vt">    _.-----._
+  .'  .---.  '.
+ / ,,,,,,,,,,, \
+| |  _     _  | |
+| | (o)   (o) |X|
+| |     ,     | |
+| |   '---'   | |
+|  \_________/  |
+ \_/         \_/</pre>
+      <div class="nf-info">
+        <div class="nf-line" id="nf-title">root@vault</div>
+        <div class="nf-line">----------</div>
+        <div class="nf-line"><b>OS</b> <span id="nf-os">n/a</span></div>
+        <div class="nf-line"><b>Host</b> <span id="nf-host">n/a</span></div>
+        <div class="nf-line"><b>Kernel</b> <span id="nf-kernel">n/a</span></div>
+        <div class="nf-line"><b>CPU</b> <span id="nf-cpu">n/a</span></div>
+        <div class="nf-line"><b>Services</b> <span id="nf-services">n/a</span></div>
+        <div class="nf-line"><b>Mode</b> read-only</div>
+        <div class="nf-line"><b>Theme</b> the wired</div>
+        <div class="nf-palette"><span style="background:#d6e2ff"></span><span style="background:#ffaa3e"></span><span style="background:#ec3428"></span><span style="background:#c8ccd4"></span><span style="background:#6f7782"></span><span style="background:#2c3550"></span><span style="background:#3a3f4a"></span><span style="background:#08090b"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="win" data-win="top" style="left:994px;top:298px;width:270px;height:232px">
+    <div class="title"><span class="ico"></span><span>TOP.EXE</span></div>
+    <div class="sunken list">
+      <div class="list-row list-head" style="flex:none"><span>Process</span><span class="num">CPU</span><span class="num">Mem</span></div>
+      <div id="top-rows" class="vt">n/a</div>
+    </div>
   </div>
 
   <div class="win" data-win="cmd" style="left:900px;top:540px;width:364px;height:246px">

@@ -1,7 +1,9 @@
 (() => {
   const STAGE_W = 1280, STAGE_H = 800;
   const $ = id => document.getElementById(id);
-  const S = { cfg: null, lastEventId: null, fails: 0, lastSeen: null, marquee: '' };
+  const S = { cfg: null, lastEventId: null, fails: 0, lastSeen: null, marquee: '', marqueeAt: 0 };
+  const LAIN = ['present day, present time', "no matter where you go, everyone's connected", 'close the world, open the next'];
+  const MARQUEE_MIN_MS = 60000; // rebuilding the marquee makes it jump; live counts change every poll
 
   // ---------- formatting ----------
   const na = v => v == null;
@@ -58,9 +60,15 @@
     if (t.last_outage) items.push(`last outage ${ago(live.ts - t.last_outage)} ago`);
     else if (t.recording_since) items.push('no outages recorded');
     items.push(t.recording_since ? `recording since ${day(t.recording_since)}` : 'recording starts in a few minutes');
+    if (!na(live.procs)) items.push(`${live.procs} processes`);
     items.push(`${services.length} eyes watching`);
-    const text = items.join('   //   ');
-    if (text !== S.marquee) { S.marquee = text; $('marquee').setAttribute('text', text); }
+    const mixed = [];  // a lain line after every other fact
+    items.forEach((item, i) => { mixed.push(item); if (i % 2 === 1 && LAIN[(i - 1) / 2]) mixed.push(LAIN[(i - 1) / 2]); });
+    LAIN.forEach(l => { if (!mixed.includes(l)) mixed.push(l); });
+    const text = mixed.join('   //   '), now = Date.now();
+    if (text !== S.marquee && (!S.marquee || now - S.marqueeAt >= MARQUEE_MIN_MS)) {
+      S.marquee = text; S.marqueeAt = now; $('marquee').setAttribute('text', text);
+    }
   }
 
   function renderThermal(live) {
@@ -89,6 +97,29 @@
     if (na(live.boot_time)) up.removeAttribute('boot'); else up.setAttribute('boot', String(live.boot_time));
   }
 
+  function renderTop(live) {
+    const box = $('top-rows');
+    if (!live.top) { if (box.textContent !== 'n/a') box.textContent = 'n/a'; return; }
+    box.replaceChildren(...live.top.map(p => {
+      const row = document.createElement('div'), name = document.createElement('span');
+      row.className = 'list-row';
+      name.textContent = p.name;
+      if (p.count > 1) { const n = document.createElement('span'); n.className = 'dim'; n.textContent = ` ×${p.count}`; n.style.padding = '0'; name.append(n); }
+      const cpu = document.createElement('span'), mem = document.createElement('span');
+      cpu.className = mem.className = 'num';
+      cpu.textContent = p.cpu.toFixed(1) + '%'; mem.textContent = p.mem.toFixed(1) + '%';
+      row.append(name, cpu, mem);
+      return row;
+    }));
+  }
+
+  function renderNeofetch() {
+    const sys = S.cfg.system || {};
+    setText('nf-title', `root@${S.cfg.host}`);
+    for (const key of ['os', 'host', 'kernel', 'cpu']) setText('nf-' + key, sys[key] || 'n/a');
+    setText('nf-services', `${S.cfg.services.length} watched`);
+  }
+
   function renderVisuals(live, services) {
     const angel = $('angel'), wired = $('wired');
     angel.data = { services };
@@ -104,6 +135,7 @@
     renderMarquee(live, services);
     renderThermal(live);
     renderSystem(live);
+    renderTop(live);
     renderVisuals(live, services);
   }
 
@@ -146,7 +178,7 @@
       }
     }
     window.vaultFx.setTimezone(S.cfg.tz);
-    setText('readme', S.cfg.readme);
+    renderNeofetch();
     setText('scale-mid', `warn ${S.cfg.thresholds.warn}° · danger ${S.cfg.thresholds.danger}°`);
     poll();
   }
