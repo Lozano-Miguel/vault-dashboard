@@ -1,10 +1,11 @@
 const { test, expect } = require('@playwright/test');
-const { config, events, scenarios } = require('./scenarios');
+const { config, events, history, scenarios } = require('./scenarios');
 
 const withoutSystem = { ...config, system: { os: null, host: null, kernel: null, cpu: null } };
 
-async function open(page, liveData, { failLive = () => false, cfg = config } = {}) {
+async function open(page, liveData, { failLive = () => false, cfg = config, hist = history() } = {}) {
   await page.route('**/api/config', r => r.fulfill({ json: cfg }));
+  await page.route('**/api/history**', r => r.fulfill({ json: hist }));
   await page.route('**/api/events**', r => r.fulfill({ json: new URL(r.request().url()).searchParams.has('after') ? [] : events }));
   await page.route('**/api/live', r => failLive() ? r.abort() : r.fulfill({ json: liveData }));
   await page.goto('/');
@@ -24,10 +25,10 @@ test('healthy: numbers and status', async ({ page }) => {
   await expect(page.locator('#marquee')).toHaveAttribute('text', /hottest today 68°C at \d\d:\d\d   \/\/   99.8% up this week/);
 });
 
-test('degraded: eyes closed and console events', async ({ page }) => {
+test('degraded: eyes closed, latest event in the memory footer', async ({ page }) => {
   await open(page, scenarios.degraded);
   await expect(page.locator('#status-text')).toHaveText('2 eyes closed · noticias-pt down');
-  await expect(page.locator('#console')).toContainText('noticias-pt DOWN');
+  await expect(page.locator('#mem-footer')).toHaveText(/^last \d\d:\d\d · noticias-pt DOWN$/);
   expect(await page.locator('#angel').getAttribute('down')).toBe('noticias-pt,noticias-pt.me');
 });
 
@@ -119,6 +120,35 @@ test('fills a 1920x1080 screen edge to edge, no side bars', async ({ page }) => 
   const r = await page.locator('#vault').evaluate(el => el.getBoundingClientRect().toJSON());
   expect(r.width).toBeGreaterThanOrEqual(1915);
   expect(r.height).toBeGreaterThanOrEqual(1075);
+});
+
+test('MEMORY.DAT replaces the console: 24h chart plus a strip per service', async ({ page }) => {
+  await open(page, scenarios.healthy);
+  await expect(page.locator('[data-win=cmd]')).toHaveCount(0);
+  await expect(page.locator('[data-win=memory] .title')).toContainText('MEMORY.DAT');
+  await page.waitForTimeout(400);
+  const px = await page.locator('#memory canvas').evaluate(c => {
+    const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+    let on = 0, red = 0;
+    for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 0) { on++; if (d[i] > 180 && d[i + 1] < 90 && d[i + 2] < 90) red++; }
+    return { on, red };
+  });
+  expect(px.on).toBeGreaterThan(1500);  // curve, axes and strips are drawn
+  expect(px.red).toBeGreaterThan(10);   // the noticias-pt outage shows as red in its strip
+  await expect(page.locator('#mem-legend')).toContainText('cpu');
+  await expect(page.locator('#mem-legend')).toContainText('outside');
+});
+
+test('MEMORY.DAT with no history yet says so instead of an empty box', async ({ page }) => {
+  await open(page, scenarios.healthy, { hist: history({ empty: true }) });
+  await expect(page.locator('#mem-empty')).toBeVisible();
+  await expect(page.locator('#mem-empty')).toContainText('collecting');
+});
+
+test('typing lain still triggers the easter egg', async ({ page }) => {
+  await open(page, scenarios.healthy);
+  await page.keyboard.type('lain');
+  await expect(page.locator('#mem-footer')).toHaveText('present day, present time.');
 });
 
 test('readme window is gone', async ({ page }) => {

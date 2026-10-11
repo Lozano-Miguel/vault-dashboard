@@ -1,7 +1,8 @@
 (() => {
   const STAGE_W = 1280, STAGE_H = 800, STAGE_MAX_W = 1422; // 1422x800 = 16:9
   const $ = id => document.getElementById(id);
-  const S = { cfg: null, lastEventId: null, fails: 0, lastSeen: null, marquee: '', marqueeAt: 0 };
+  const S = { cfg: null, lastEventId: null, fails: 0, lastSeen: null, marquee: '', marqueeAt: 0, lastEvent: null, egg: 0 };
+  const HISTORY_MS = 60000; // samples land every 5 min; a minute is plenty
   const LAIN = ['present day, present time', "no matter where you go, everyone's connected", 'close the world, open the next'];
   const MARQUEE_MIN_MS = 60000; // rebuilding the marquee makes it jump; live counts change every poll
 
@@ -140,10 +141,41 @@
     renderVisuals(live, services);
   }
 
+  const LEVEL_COLOR = { alarm: '#ef3b2f', warn: '#f2a43a', dim: '#6f7782' };
+
+  function renderFooter() {
+    if (Date.now() < S.egg) return;
+    const foot = $('mem-footer'), e = S.lastEvent;
+    setText('mem-footer', e ? `last ${hhmm(e.ts)} · ${e.text}` : 'no events yet · all quiet');
+    foot.style.color = (e && LEVEL_COLOR[e.level]) || '';
+  }
+
   function pushEvents(events) {
-    const initial = S.lastEventId === null, con = $('console');
-    events.forEach(e => con.pushAt(e.ts, e.text, e.level, initial));
+    if (events.length) S.lastEvent = events[events.length - 1];
     S.lastEventId = events.length ? events[events.length - 1].id : (S.lastEventId ?? 0);
+    renderFooter();
+  }
+
+  async function pollHistory() {
+    try {
+      const hist = await getJSON('/api/history?hours=24');
+      $('memory').data = { history: hist, meta: { ...S.cfg.thresholds, order: S.cfg.services.map(s => s.id) } };
+      $('mem-empty').hidden = hist.samples.length > 0;
+    } catch (err) { /* keep the last chart; the ticker already shows "signal lost" */ }
+    setTimeout(pollHistory, HISTORY_MS);
+  }
+
+  function watchForLain() {  // the design's easter egg, moved here from the old console
+    let keys = '';
+    addEventListener('keydown', e => {
+      keys = (keys + (e.key || '')).slice(-4).toLowerCase();
+      if (keys !== 'lain') return;
+      const win = document.querySelector('[data-win=memory]');
+      win.classList.add('egg'); setTimeout(() => win.classList.remove('egg'), 140);
+      S.egg = Date.now() + 6000;
+      setText('mem-footer', 'present day, present time.'); $('mem-footer').style.color = LEVEL_COLOR.alarm;
+      setTimeout(renderFooter, 6100);
+    });
   }
 
   // ---------- loop ----------
@@ -191,6 +223,8 @@
     }
     window.vaultFx.setTimezone(S.cfg.tz);
     renderNeofetch();
+    watchForLain();
+    pollHistory();
     setText('scale-mid', `warn ${S.cfg.thresholds.warn}° · danger ${S.cfg.thresholds.danger}°`);
     poll();
   }

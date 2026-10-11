@@ -34,8 +34,21 @@ const events = [
   { id: 2, ts: now - 300, level: 'alarm', text: 'noticias-pt DOWN' },
 ];
 
+// 24 h of 5-minute samples: an afternoon heat curve, outside temp lower, one 40-min outage of noticias-pt
+function history({ empty = false } = {}) {
+  const from = now - 24 * 3600, samples = [], services = Object.fromEntries(IDS.map(id => [id, []]));
+  if (!empty) for (let ts = from + 300; ts <= now; ts += 300) {
+    const h = ((ts / 3600) % 24 + 24) % 24, heat = Math.max(0, Math.sin((h - 9) / 24 * 2 * Math.PI));
+    const cpu = 42 + 24 * heat, outside = 16 + 12 * heat;
+    samples.push([ts, +cpu.toFixed(1), +(cpu + 2).toFixed(1), +outside.toFixed(1)]);
+    const outage = ts > now - 6 * 3600 && ts <= now - 6 * 3600 + 2400;
+    IDS.forEach(id => services[id].push([ts, id === 'noticias-pt' && outage ? 0 : 20, 20]));
+  }
+  return { interval: 300, from, to: now, samples, services };
+}
+
 module.exports = {
-  IDS, config, events,
+  IDS, config, events, history,
   scenarios: {
     healthy: live(),
     degraded: live({ temp: 61, outside: 27, cpu: 18, down: ['noticias-pt', 'noticias-pt.me'] }),

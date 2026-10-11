@@ -770,10 +770,68 @@ class PixelArt extends Fx {
   }
 }
 
+/* ---------- MEMORY (last 24 h: temperature curve + a strip per service) ---------- */
+class Memory extends Fx {
+  constructor() { super(); this.static = true; this.hist = null; this.meta = { warn: 70, danger: 80, order: [] }; }
+  set data(d) { this.hist = d.history; this.meta = d.meta; this.dirty = true; }
+  draw() {
+    const ctx = this.ctx, h = this.hist;
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, this.cv.width, this.cv.height);
+    if (!h || !h.samples.length) return;
+    const k = 2, W = Math.floor(this.w / k), H = Math.floor(this.h / k), c = this.offscreen(W, H);
+    const ids = this.meta.order, rowH = 3, strips = ids.length * rowH;
+    const x0 = 1, x1 = W - 2, y0 = 3, y1 = H - strips - 4, span = Math.max(1, h.to - h.from);
+    const X = ts => Math.round(x0 + (ts - h.from) / span * (x1 - x0));
+    const temps = h.samples.flatMap(s => [s[1], s[2]]).filter(v => v != null);
+    const outs = h.samples.map(s => s[3]).filter(v => v != null);
+    let lo = Math.floor((Math.min(...temps, ...outs) - 4) / 5) * 5, hi = Math.ceil((Math.max(...temps) + 4) / 5) * 5;
+    if (hi - lo < 20) hi = lo + 20;
+    const Y = t => Math.round(y1 - (t - lo) / (hi - lo) * (y1 - y0));
+    const px = (x, y, col) => { c.fillStyle = col; c.fillRect(x, y, 1, 1); };
+    const hline = (y, col, step) => { for (let x = x0; x <= x1; x += step) px(x, y, col); };
+    hline(y1, 'rgba(200,204,212,0.3)', 1);
+    for (const [t, col] of [[this.meta.warn, rgba(AMBER, 0.35)], [this.meta.danger, rgba(RED, 0.45)]]) if (t > lo && t < hi) hline(Y(t), col, 3);
+    for (let i = 1; i < 4; i++) { const x = Math.round(x0 + i * (x1 - x0) / 4); for (let y = y0; y < y1; y += 3) px(x, y, 'rgba(200,204,212,0.12)'); }
+    // a line drawn column by column so it stays crisp; gaps over 2.5 intervals mean vault was down
+    const plot = (pts, colOf, dotted) => {
+      for (let i = 1; i < pts.length; i++) {
+        const [ta, va] = pts[i - 1], [tb, vb] = pts[i];
+        if (va == null || vb == null || tb - ta > h.interval * 2.5) continue;
+        const xa = X(ta), xb = X(tb), ya = Y(va), yb = Y(vb);
+        for (let x = xa; x <= xb; x++) {
+          if (dotted && x % 2) continue;
+          const f = xb === xa ? 1 : (x - xa) / (xb - xa), v = va + (vb - va) * f, y = Math.round(ya + (yb - ya) * f);
+          const yn = Math.round(ya + (yb - ya) * Math.min(1, f + 1 / Math.max(1, xb - xa)));
+          for (let yy = Math.min(y, yn); yy <= Math.max(y, yn); yy++) px(x, yy, colOf(v));
+        }
+      }
+    };
+    plot(h.samples.map(s => [s[0], s[3]]), () => 'rgba(170,176,186,0.55)', true);
+    plot(h.samples.map(s => [s[0], s[1]]), v => rgba(tempColor(v), 1), false);
+    // one strip per service: dim when up, red where it was down
+    const cell = Math.max(1, Math.round(h.interval / span * (x1 - x0)));
+    ids.forEach((id, r) => {
+      const y = y1 + 3 + r * rowH;
+      for (const [ts, up, total] of (h.services[id] || [])) {
+        if (!total) continue;
+        c.fillStyle = up === total ? 'rgba(200,204,212,0.32)' : up === 0 ? rgba(RED, 1) : rgba(RED, 0.65);
+        c.fillRect(X(ts) - cell + 1, y, cell, rowH - 1);
+      }
+    });
+    this.blit(W, H, k);
+    ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    const fs = 13; ctx.font = `${fs}px ${FONT}`; ctx.fillStyle = 'rgba(170,176,186,0.75)';
+    ctx.textBaseline = 'top'; ctx.textAlign = 'left'; ctx.fillText(hi + '°', x0 * k + 2, y0 * k);
+    ctx.textBaseline = 'bottom'; ctx.fillText(lo + '°', x0 * k + 2, y1 * k - 1);
+    ctx.textAlign = 'center'; ctx.fillText('-12h', (x0 + (x1 - x0) / 2) * k, y1 * k - 1);
+    ctx.textAlign = 'right'; ctx.fillText('now', x1 * k, y1 * k - 1);
+  }
+}
+
 const def = (n, c) => { if (!customElements.get(n)) customElements.define(n, c); };
 def('vault-ophanim', Ophanim); def('vault-wired', Wired); def('vault-heatmap', Heatmap); def('vault-wallpaper', Wallpaper);
 def('vault-crt', Crt); def('vault-console', Console); def('vault-clock', Clock); def('vault-marquee', Marquee);
-def('vault-pixelart', PixelArt);
+def('vault-pixelart', PixelArt); def('vault-memory', Memory);
 window.vaultFx = {
   setTimezone(tz) { TZ = tz; },
   setScale(k) { SCALE = k; LIVE.forEach(el => el.resize()); },

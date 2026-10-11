@@ -64,6 +64,13 @@
   #top-rows span { padding: 0 5px; white-space: nowrap; overflow: hidden; }
   .num { text-align: right; }
   .dim { opacity: .5; }
+  .mem-body { background: #000; display: flex; flex-direction: column; gap: 3px; padding: 4px 7px; font-size: 15px; color: #c0c0c0; }
+  .mem-legend { flex: none; display: flex; gap: 12px; color: #6f7782; }
+  .mem-chart { flex: 1; min-height: 0; position: relative; }
+  #mem-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; color: #6f7782; padding: 0 20px; }
+  #mem-empty[hidden] { display: none; }
+  .mem-footer { flex: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .egg { filter: invert(1); }
   .term-body { background: #000; padding: 4px 7px; display: flex; flex-direction: column; font-size: 18px;
     line-height: 1.08; color: #c0c0c0; }
 </style>
@@ -141,11 +148,12 @@
     </div>
   </div>
 
-  <div class="win" data-win="cmd" style="right:16px;top:540px;width:364px;height:246px">
-    <div class="title active"><span class="ico term"></span><span>cmd.exe · vault --tail</span></div>
-    <div class="sunken term-body vt">
-      <div style="flex:none;margin-bottom:4px">C:\VAULT&gt; tail -f events.log</div>
-      <div style="flex:1;min-height:0"><vault-console id="console" feed="live" rows="12"></vault-console></div>
+  <div class="win" data-win="memory" style="right:16px;top:540px;width:364px;height:246px">
+    <div class="title active"><span class="ico term"></span><span>MEMORY.DAT · last 24h</span></div>
+    <div class="sunken mem-body vt">
+      <div id="mem-legend" class="mem-legend"><span style="color:#d6e2ff">━ cpu</span><span>┄ outside</span><span>▬ services</span></div>
+      <div class="mem-chart"><vault-memory id="memory"></vault-memory><div id="mem-empty" hidden>collecting… the first points appear within 5 minutes</div></div>
+      <div id="mem-footer" class="mem-footer">no events yet · all quiet</div>
     </div>
   </div>
 
