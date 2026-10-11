@@ -743,9 +743,37 @@ class Marquee extends HTMLElement {
   }
 }
 
+/* ---------- PIXEL ART (braille-encoded bitmaps) ---------- */
+const BRAILLE = [[0x01, 0, 0], [0x02, 0, 1], [0x04, 0, 2], [0x40, 0, 3], [0x08, 1, 0], [0x10, 1, 1], [0x20, 1, 2], [0x80, 1, 3]];
+class PixelArt extends Fx {
+  static get observedAttributes() { return [...super.observedAttributes, 'invert']; }
+  constructor() { super(); this.static = true; this.lines = []; }
+  set art(lines) { this.lines = lines || []; this.dirty = true; }
+  draw() {
+    const ctx = this.ctx, lines = this.lines;
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, this.cv.width, this.cv.height);
+    if (!lines.length) return;
+    const cols = Math.max(...lines.map(l => [...l].length)), rows = lines.length;
+    const d = Math.min(this.cv.width / (cols * 2), this.cv.height / (rows * 4)), inv = this.a('invert', '0') === '1';
+    ctx.fillStyle = this.a('color', '#c8ccd4');
+    for (let y = 0; y < rows; y++) {
+      const chars = [...lines[y]];
+      for (let x = 0; x < cols; x++) {
+        const v = chars[x] ? chars[x].codePointAt(0) - 0x2800 : 0;
+        for (const [b, dx, dy] of BRAILLE) {
+          if (!!(v & b) === inv) continue;
+          const X = x * 2 + dx, Y = y * 4 + dy, x0 = Math.floor(X * d), y0 = Math.floor(Y * d);
+          ctx.fillRect(x0, y0, Math.floor((X + 1) * d) - x0, Math.floor((Y + 1) * d) - y0); // integer edges: no blur
+        }
+      }
+    }
+  }
+}
+
 const def = (n, c) => { if (!customElements.get(n)) customElements.define(n, c); };
 def('vault-ophanim', Ophanim); def('vault-wired', Wired); def('vault-heatmap', Heatmap); def('vault-wallpaper', Wallpaper);
 def('vault-crt', Crt); def('vault-console', Console); def('vault-clock', Clock); def('vault-marquee', Marquee);
+def('vault-pixelart', PixelArt);
 window.vaultFx = {
   setTimezone(tz) { TZ = tz; },
   setScale(k) { SCALE = k; LIVE.forEach(el => el.resize()); },

@@ -4,6 +4,7 @@ Two daemon threads: "local" (host metrics every 3 s, history, prune) and "networ
 (service checks, weather) so slow network calls never delay the host readings.
 """
 import logging
+import os
 import threading
 import time
 
@@ -16,6 +17,7 @@ from .events import (
 from .weather import Weather
 
 log = logging.getLogger("vault.sampler")
+PAGE_KB = os.sysconf("SC_PAGE_SIZE") // 1024
 
 
 class Sampler:
@@ -33,6 +35,7 @@ class Sampler:
         self.temp_level = "normal"
         self.wifi_state = None
         self.prev_cpu = None
+        self.prev_procs = None
         self.prev_net = None
         self.last_throttle_raw = None
         self.last_throttle_event = None
@@ -80,6 +83,10 @@ class Sampler:
         raw_throttle = host.read_throttle_count(c.host_sys)
         mem = host.read_meminfo(c.host_proc)
         disk = host.read_disk(c.disk_path)
+        procs = host.read_processes(c.host_proc)
+        total_delta = cpu_times[1] - self.prev_cpu[1] if cpu_times and self.prev_cpu else None
+        top = (host.top_processes(self.prev_procs, procs, total_delta, mem[1] * 1024 if mem else 0, PAGE_KB)
+               if procs is not None else None)
         live = {
             "cpu_temp": temp,
             "cpu_pct": host.cpu_percent(self.prev_cpu, cpu_times),
@@ -89,8 +96,11 @@ class Sampler:
             "boot_time": host.read_boot_time(c.host_proc, now),
             "wifi": wifi,
             "net": self._net_rate(host.read_net_bytes(c.host_proc, c.wifi_iface), now),
+            "top": top,
+            "procs": len(procs) if procs is not None else None,
         }
         self.prev_cpu = cpu_times
+        self.prev_procs = procs
         events = []
         with self.lock:
             prev_today = self.throttle_base + self.window_throttle
@@ -199,6 +209,8 @@ class Sampler:
             "boot_time": live.get("boot_time"),
             "wifi": live.get("wifi"),
             "net": live.get("net"),
+            "top": live.get("top"),
+            "procs": live.get("procs"),
             "services": services,
             "ticker": ticker,
         }

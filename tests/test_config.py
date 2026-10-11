@@ -32,15 +32,18 @@ class LoadConfigTest(unittest.TestCase):
         self.assertIsNone(cfg.latitude)
         self.assertEqual(cfg.host, "vault")
         self.assertEqual(cfg.network, "homelab")
+        self.assertEqual(cfg.os_release, "/host/os-release")
+        self.assertFalse(hasattr(cfg, "readme"))
         self.assertEqual([s.id for s in cfg.services], ["app", "db", "app.example"])
         self.assertEqual([s.kind for s in cfg.services], ["container", "container", "site"])
 
     def test_env_and_json_overrides(self):
-        cfg = self.load({"host": "box", "network": "net1", "readme": "hi", "services": SERVICES},
-                        PORT="9000", WIFI_IFACE="wlp2s0", LATITUDE="38.7", LONGITUDE="-9.1", TZ="UTC")
+        cfg = self.load({"host": "box", "network": "net1", "services": SERVICES},
+                        PORT="9000", WIFI_IFACE="wlp2s0", LATITUDE="38.7", LONGITUDE="-9.1", TZ="UTC",
+                        OS_RELEASE="/etc/os-release")
         self.assertEqual((cfg.port, cfg.wifi_iface, cfg.tz), (9000, "wlp2s0", "UTC"))
         self.assertEqual((cfg.latitude, cfg.longitude), (38.7, -9.1))
-        self.assertEqual((cfg.host, cfg.network, cfg.readme), ("box", "net1", "hi"))
+        self.assertEqual((cfg.host, cfg.network, cfg.os_release), ("box", "net1", "/etc/os-release"))
 
     def test_bad_number_names_the_variable(self):
         with self.assertRaisesRegex(ConfigError, "PORT"):

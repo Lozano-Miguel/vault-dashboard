@@ -1,8 +1,10 @@
 const { test, expect } = require('@playwright/test');
 const { config, events, scenarios } = require('./scenarios');
 
-async function open(page, liveData, { failLive = () => false } = {}) {
-  await page.route('**/api/config', r => r.fulfill({ json: config }));
+const withoutSystem = { ...config, system: { os: null, host: null, kernel: null, cpu: null } };
+
+async function open(page, liveData, { failLive = () => false, cfg = config } = {}) {
+  await page.route('**/api/config', r => r.fulfill({ json: cfg }));
   await page.route('**/api/events**', r => r.fulfill({ json: new URL(r.request().url()).searchParams.has('after') ? [] : events }));
   await page.route('**/api/live', r => failLive() ? r.abort() : r.fulfill({ json: liveData }));
   await page.goto('/');
@@ -39,8 +41,9 @@ test('overheating: burning status and red LCD', async ({ page }) => {
 test('sensors missing: n/a everywhere, page keeps working', async ({ page }) => {
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
-  await open(page, scenarios.sensors);
-  for (const id of ['#lcd', '#outside', '#throttled', '#cpu-text', '#mem-text', '#disk-text', '#wifi-text', '#net-text', '#uptime'])
+  await open(page, scenarios.sensors, { cfg: withoutSystem });
+  for (const id of ['#lcd', '#outside', '#throttled', '#cpu-text', '#mem-text', '#disk-text', '#wifi-text', '#net-text', '#uptime',
+                    '#nf-os', '#nf-host', '#nf-kernel', '#nf-cpu', '#top-rows'])
     await expect(page.locator(id)).toHaveText('n/a');
   await expect(page.locator('#status-text')).toHaveText('all systems operational');
   expect(errors).toEqual([]);
@@ -82,10 +85,55 @@ test('layout: no window covers the wheel or any label position', async ({ page }
   expect(result.outside).toBe(0);
 });
 
-test('readme text fits its window', async ({ page }) => {
+test('readme window is gone', async ({ page }) => {
   await open(page, scenarios.healthy);
-  const fits = await page.locator('#readme').evaluate(el => el.scrollHeight <= el.clientHeight);
+  await expect(page.locator('[data-win=readme]')).toHaveCount(0);
+});
+
+test('neofetch panel: identity, no repeated live numbers, every line fits', async ({ page }) => {
+  await open(page, scenarios.healthy);
+  await expect(page.locator('#nf-title')).toHaveText('root@vault');
+  await expect(page.locator('#nf-os')).toHaveText('Debian 12 (bookworm)');
+  await expect(page.locator('#nf-host')).toHaveText('ThinkCentre M710q');
+  await expect(page.locator('#nf-kernel')).toHaveText('6.1.0-28-amd64');
+  await expect(page.locator('#nf-cpu')).toHaveText('i3-7100 (4) @ 3.90GHz');
+  await expect(page.locator('#nf-services')).toHaveText('7 watched');
+  const overflow = await page.locator('[data-win=neofetch] .nf-line').evaluateAll(
+    els => els.filter(el => el.scrollWidth > el.clientWidth + 1).map(el => el.textContent));
+  expect(overflow).toEqual([]);
+  const fitsHeight = await page.locator('[data-win=neofetch] .sunken').evaluate(el => el.scrollHeight <= el.clientHeight);
+  expect(fitsHeight).toBe(true);
+});
+
+test('neofetch art is drawn as crisp pixels from the braille bitmap', async ({ page }) => {
+  await open(page, scenarios.healthy);
+  await page.waitForTimeout(300);
+  const lit = await page.locator('#nf-art canvas').evaluate(c => {
+    const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+    let on = 0, partial = 0;
+    for (let i = 3; i < d.length; i += 4) { if (d[i] === 255) on++; else if (d[i] > 0) partial++; }
+    return { on, partial, w: c.width, h: c.height };
+  });
+  expect(lit.w).toBeGreaterThan(110);   // big enough to read, not a thumbnail
+  expect(lit.on).toBeGreaterThan(500);   // the drawing is there
+  expect(lit.partial).toBe(0);          // no anti-aliased (blurry) edges
+});
+
+test('TOP.EXE lists the top processes', async ({ page }) => {
+  await open(page, scenarios.healthy);
+  const rows = page.locator('#top-rows > div');
+  await expect(rows).toHaveCount(8);
+  await expect(rows.nth(0)).toHaveText(/node\s*25\.0%\s*6\.3%/);
+  await expect(rows.nth(1)).toHaveText(/postgres\s*×6\s*5\.0%\s*2\.4%/);
+  const fits = await page.locator('#top-rows').evaluate(el => el.scrollHeight <= el.clientHeight);
   expect(fits).toBe(true);
+});
+
+test('ticker adds process count and lain lines', async ({ page }) => {
+  await open(page, scenarios.healthy);
+  await expect(page.locator('#marquee')).toHaveAttribute('text', /204 processes/);
+  await expect(page.locator('#marquee')).toHaveAttribute('text', /present day, present time/);
+  await expect(page.locator('#marquee')).toHaveAttribute('text', /close the world, open the next/);
 });
 
 for (const [w, h] of [[1280, 800], [1920, 1080], [1366, 768], [390, 844]]) {

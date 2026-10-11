@@ -18,8 +18,9 @@ class FakeSampler:
 class ServerTest(unittest.TestCase):
     def setUp(self):
         web = make_tree(self, {"index.html": "<h1>vault</h1>", "app.js": "1;", "secret.txt": "no"})
+        proc = make_tree(self, {"sys/kernel/osrelease": "6.1.0-28-amd64\n"})
         cfg = Config(services=(Service("app", "http://app/"), Service("app.pt", "https://app.pt/", "app")),
-                     readme="hello", port=0, web_dir=web)
+                     port=0, web_dir=web, host_proc=proc, host_sys="/nonexistent", os_release="/nonexistent")
         self.store = Store(":memory:")
         self.addCleanup(self.store.close)
         self.server = make_server(cfg, FakeSampler(), self.store, host="127.0.0.1")
@@ -48,8 +49,10 @@ class ServerTest(unittest.TestCase):
         self.assertEqual(cfg["services"], [{"id": "app", "kind": "container", "parent": None},
                                            {"id": "app.pt", "kind": "site", "parent": "app"}])
         self.assertEqual(cfg["thresholds"], {"warn": 70.0, "danger": 80.0})
-        self.assertEqual((cfg["host"], cfg["network"], cfg["readme"], cfg["poll_ms"], cfg["tz"]),
-                         ("vault", "homelab", "hello", 3000, "Europe/Lisbon"))
+        self.assertEqual((cfg["host"], cfg["network"], cfg["poll_ms"], cfg["tz"]),
+                         ("vault", "homelab", 3000, "Europe/Lisbon"))
+        self.assertEqual(cfg["system"], {"os": None, "host": None, "kernel": "6.1.0-28-amd64", "cpu": None})
+        self.assertNotIn("readme", cfg)
         self.assertNotIn("check", json.dumps(cfg))  # internal URLs stay private
 
     def test_events(self):
