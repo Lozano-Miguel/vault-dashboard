@@ -75,7 +75,12 @@ class SamplerTest(unittest.TestCase):
             write(self.sys, f"devices/system/cpu/{path}/thermal_throttle/package_throttle_count", "1\n")
         self.sampler.tick_host()
         self.assertEqual(self.sampler.snapshot()["throttle_today"], 3)
-        self.assertEqual([t for t in self.texts() if t.startswith("throttle")], ["throttle #2", "throttle #3"])
+        write(self.sys, "devices/system/cpu/cpu1/thermal_throttle/package_throttle_count", "4\n")
+        self.clock.t += 600
+        self.sampler.tick_host()
+        self.assertEqual(self.sampler.snapshot()["throttle_today"], 6)
+        # the tick 3 s after #2 is counted but not announced; the next one after 10 min is
+        self.assertEqual([t for t in self.texts() if t.startswith("throttle")], ["throttle #2", "throttle #6"])
 
     def test_checks_debounce_and_events(self):
         self.sampler.tick_checks()

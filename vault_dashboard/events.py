@@ -95,10 +95,17 @@ def temp_events(prev, new, temp):
     return []
 
 
-def throttle_events(prev_today, new_today):
-    if new_today > prev_today:
-        return [Event("throttle", "warn", f"throttle #{new_today}")]
-    return []
+THROTTLE_COOLDOWN_S = 600
+
+
+def throttle_events(prev_today, new_today, now=None, last_emit=None, cooldown=THROTTLE_COOLDOWN_S):
+    # A CPU at its thermal limit throttles many times a second; announce it at most every 10 min
+    # so a hot afternoon can't flood the console and push DOWN lines off screen.
+    if new_today <= prev_today:
+        return []
+    if last_emit is not None and now is not None and now - last_emit < cooldown:
+        return []
+    return [Event("throttle", "warn", f"throttle #{new_today}")]
 
 
 def wifi_state(prev, wifi, weak_dbm, hyst=3):

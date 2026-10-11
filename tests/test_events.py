@@ -89,6 +89,11 @@ class OtherEventsTest(unittest.TestCase):
         self.assertEqual([e.text for e in throttle_events(1, 3)], ["throttle #3"])
         self.assertEqual(throttle_events(3, 3), [])
 
+    def test_throttle_is_rate_limited_during_sustained_throttling(self):
+        self.assertEqual(throttle_events(3, 9, now=1300, last_emit=1000), [])  # 5 min after the last one
+        self.assertEqual([e.text for e in throttle_events(3, 9, now=1600, last_emit=1000)], ["throttle #9"])
+        self.assertEqual([e.text for e in throttle_events(3, 9, now=1300, last_emit=None)], ["throttle #9"])
+
     def test_wifi_transitions(self):
         weak, good = {"dbm": -80, "quality": 30}, {"dbm": -58, "quality": 72}
         self.assertEqual(wifi_state(None, good, -75), "ok")

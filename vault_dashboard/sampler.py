@@ -35,6 +35,7 @@ class Sampler:
         self.prev_cpu = None
         self.prev_net = None
         self.last_throttle_raw = None
+        self.last_throttle_event = None
         self.throttle_base = 0
         self.window_throttle = 0
         self.ticker = {}
@@ -97,7 +98,11 @@ class Sampler:
                 if last is not None:
                     self.window_throttle += raw_throttle - last if raw_throttle >= last else raw_throttle
                 self.last_throttle_raw = raw_throttle
-            events += throttle_events(prev_today, self.throttle_base + self.window_throttle)
+            throttled = throttle_events(prev_today, self.throttle_base + self.window_throttle,
+                                        now, self.last_throttle_event)
+            if throttled:
+                self.last_throttle_event = now
+            events += throttled
             level = temp_level(self.temp_level, temp, c.temp_warn_c, c.temp_danger_c)
             events += temp_events(self.temp_level, level, temp)
             self.temp_level = level
