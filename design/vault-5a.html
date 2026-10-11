@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1280">
+<title>vault · ophanim desktop (5a reference)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+<style>html,body{margin:0;background:#000}body{min-height:100vh;display:flex}#vault{margin:auto}</style>
+</head>
+<body>
+<!-- Static snapshot: scenario "degraded" (noticias-pt + noticias-pt.me down, 61°C). Values are baked in; see README "Data contract". -->
+<div id="vault" style="flex:none;overflow:hidden;width:1280px;height:800px;position:relative;background:#0b0c0e;font-family:Tahoma,Verdana,'Segoe UI',sans-serif;font-size:11px;color:#000">
+  <div style="position:absolute;inset:0"><vault-wallpaper></vault-wallpaper></div>
+  <div style="position:absolute;left:190px;top:24px;width:900px;height:776px"><vault-ophanim variant="pixel" px="3" labels="1" temp="61" cpu="18" down="noticias-pt,noticias-pt.me" motion="full"></vault-ophanim></div>
+  <div style="position:absolute;left:0;right:0;top:0;height:24px;display:flex;align-items:center;gap:14px;padding:0 10px;background:rgba(0,0,0,0.82);border-bottom:1px solid #2a2e36;font-family:'VT323',monospace;font-size:19px;color:#aab0ba">
+    <span style="flex:none;display:flex;align-items:center;gap:7px;color:#ef3b2f"><span style="width:9px;height:9px;background:#ef3b2f"></span>2 eyes closed · noticias-pt down</span>
+    <div style="flex:1;min-width:0;color:#6f7782"><div style="width:100%"><vault-marquee text="obilhete 200 OK 42ms   //   noticias-pt DOWN   //   obilhete-scraper 200 OK 230ms   //   npm 200 OK 12ms   //   postgres 200 OK 3ms   //   obilhete.pt 200 OK 88ms   //   noticias-pt.me DOWN   //   cpu 61°C   //   outside 27°C   //   wifi -58dBm 72%   //   load 0.42 0.51 0.38   //   ↓ 1.2 MB/s ↑ 340 KB/s   //   7 eyes watching" speed="32" motion="full"></vault-marquee></div></div>
+    <span style="flex:none;color:#5f6771">read-only · up <vault-clock format="uptime"></vault-clock></span><span style="flex:none;color:#aab0ba"><vault-clock format="datetime"></vault-clock></span>
+  </div>
+
+  <div style="position:absolute;left:16px;top:38px;width:262px;height:214px;box-sizing:border-box;display:flex;flex-direction:column;background:#d4d0c8;border:1px solid;border-color:#d4d0c8 #404040 #404040 #d4d0c8;box-shadow:inset 1px 1px 0 #fff,inset -1px -1px 0 #808080,2px 2px 0 rgba(0,0,0,0.4);padding:3px">
+    <div style="height:18px;flex:none;display:flex;align-items:center;gap:5px;padding:0 3px;background:linear-gradient(90deg,#808080,#b5b5b5);color:#e6e3dc;font-weight:bold"><span style="width:12px;height:12px;background:#d4d0c8;border:1px solid #fff;box-sizing:border-box"></span><span>THERMAL.SYS</span></div>
+    <div style="flex:1;padding:7px 6px 4px;display:flex;flex-direction:column;gap:7px">
+      <div style="font-family:'VT323',monospace;font-size:84px;line-height:0.8;padding:9px 10px 1px;background:#000;color:#e6ecff;text-shadow:0 0 10px #e6ecff;border:1px solid;border-color:#808080 #fff #fff #808080">61°C</div>
+      <div style="display:grid;grid-template-columns:62px 1fr;gap:2px 6px"><span>Outside</span><span>27°C · attic gap +34°</span><span>Throttled</span><span>0 time(s) today</span></div>
+      <div style="height:13px;padding:2px;border:1px solid;border-color:#808080 #fff #fff #808080"><div style="height:100%;width:52%;background:repeating-linear-gradient(90deg,#2c3550 0 7px,transparent 7px 9px)"></div></div>
+      <div style="display:flex;justify-content:space-between;color:#404040;font-size:10px;margin-top:-5px"><span>30°</span><span>warn 70° · danger 80°</span><span>90°</span></div>
+    </div>
+  </div>
+
+  <div style="position:absolute;left:26px;top:266px;width:254px;height:190px;box-sizing:border-box;display:flex;flex-direction:column;background:#d4d0c8;border:1px solid;border-color:#d4d0c8 #404040 #404040 #d4d0c8;box-shadow:inset 1px 1px 0 #fff,inset -1px -1px 0 #808080,2px 2px 0 rgba(0,0,0,0.4);padding:3px">
+    <div style="height:18px;flex:none;display:flex;align-items:center;gap:5px;padding:0 3px;background:linear-gradient(90deg,#808080,#b5b5b5);color:#e6e3dc;font-weight:bold"><span style="width:12px;height:12px;background:#d4d0c8;border:1px solid #fff;box-sizing:border-box"></span><span>SYSTEM.EXE</span></div>
+    <div style="flex:1;padding:8px 6px 4px;display:grid;grid-template-columns:44px minmax(0,1fr) 66px;gap:6px 6px;align-content:start;align-items:center">
+      <span>CPU</span><div style="height:11px;padding:2px;border:1px solid;border-color:#808080 #fff #fff #808080"><div style="height:100%;width:18%;background:repeating-linear-gradient(90deg,#2c3550 0 6px,transparent 6px 8px)"></div></div><span>18% · 0.42</span>
+      <span>Memory</span><div style="height:11px;padding:2px;border:1px solid;border-color:#808080 #fff #fff #808080"><div style="height:100%;width:66%;background:repeating-linear-gradient(90deg,#2c3550 0 6px,transparent 6px 8px)"></div></div><span>5.2 / 7.9 GB</span>
+      <span>Disk</span><div style="height:11px;padding:2px;border:1px solid;border-color:#808080 #fff #fff #808080"><div style="height:100%;width:38%;background:repeating-linear-gradient(90deg,#2c3550 0 6px,transparent 6px 8px)"></div></div><span>90 / 235 GB</span>
+      <span>Wi-Fi</span><span style="grid-column:span 2">-58 dBm · 72% · only uplink</span>
+      <span>Traffic</span><span style="grid-column:span 2">↓ 1.2 MB/s   ↑ 340 KB/s</span>
+      <span>Uptime</span><span style="grid-column:span 2"><vault-clock format="uptime"></vault-clock></span>
+    </div>
+  </div>
+
+  <div style="position:absolute;left:16px;top:590px;width:440px;height:196px;box-sizing:border-box;display:flex;flex-direction:column;background:#d4d0c8;border:1px solid;border-color:#d4d0c8 #404040 #404040 #d4d0c8;box-shadow:inset 1px 1px 0 #fff,inset -1px -1px 0 #808080,2px 2px 0 rgba(0,0,0,0.4);padding:3px">
+    <div style="height:18px;flex:none;display:flex;align-items:center;gap:5px;padding:0 3px;background:linear-gradient(90deg,#808080,#b5b5b5);color:#e6e3dc;font-weight:bold"><span style="width:12px;height:12px;background:#d4d0c8;border:1px solid #fff;box-sizing:border-box"></span><span>WIRED.LNK</span></div>
+    <div style="flex:1;min-height:0;margin-top:3px;position:relative;background:#000;border:1px solid;border-color:#808080 #fff #fff #808080;box-shadow:inset 1px 1px 0 #404040">
+      <div style="position:absolute;inset:2px"><vault-wired variant="pixel" color="#c8ccd4" temp="61" down="noticias-pt,noticias-pt.me" motion="full"></vault-wired></div>
+    </div>
+  </div>
+
+  <div style="position:absolute;left:994px;top:38px;width:270px;height:246px;box-sizing:border-box;display:flex;flex-direction:column;background:#d4d0c8;border:1px solid;border-color:#d4d0c8 #404040 #404040 #d4d0c8;box-shadow:inset 1px 1px 0 #fff,inset -1px -1px 0 #808080,2px 2px 0 rgba(0,0,0,0.4);padding:3px">
+    <div style="height:18px;flex:none;display:flex;align-items:center;gap:5px;padding:0 3px;background:linear-gradient(90deg,#6e1010,#c0453c);color:#fff;font-weight:bold"><span style="width:12px;height:12px;background:#d4d0c8;border:1px solid #fff;box-sizing:border-box"></span><span>SERVICES.EXE</span></div>
+    <div style="flex:1;min-height:0;margin-top:3px;background:#000;border:1px solid;border-color:#808080 #fff #fff #808080;box-shadow:inset 1px 1px 0 #404040;display:flex;flex-direction:column">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 44px 50px;flex:none">
+        <span style="padding:2px 5px;background:#d4d0c8;border:1px solid;border-color:#fff #808080 #808080 #fff">Name</span><span style="padding:2px 5px;background:#d4d0c8;border:1px solid;border-color:#fff #808080 #808080 #fff">State</span><span style="padding:2px 5px;background:#d4d0c8;border:1px solid;border-color:#fff #808080 #808080 #fff;text-align:right">Resp.</span>
+      </div>
+      
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 44px 50px;align-items:center;font-family:'VT323',monospace;font-size:17px;line-height:1.3;color:#d0d0d0">
+          <span style="padding:0 5px;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden"><span style="width:7px;height:7px;flex:none;background:#e8e8e8"></span>obilhete</span>
+          <span style="padding:0 5px">UP</span><span style="padding:0 5px;text-align:right">42ms</span>
+        </div>
+      
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 44px 50px;align-items:center;font-family:'VT323',monospace;font-size:17px;line-height:1.3;color:#ff5a4a">
+          <span style="padding:0 5px;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden"><span style="width:7px;height:7px;flex:none;background:#d02a1e"></span>noticias-pt</span>
+          <span style="padding:0 5px">DOWN</span><span style="padding:0 5px;text-align:right">—</span>
+        </div>
+      
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 44px 50px;align-items:center;font-family:'VT323',monospace;font-size:17px;line-height:1.3;color:#d0d0d0">
+          <span style="padding:0 5px;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden"><span style="width:7px;height:7px;flex:none;background:#e8e8e8"></span>obilhete-scraper</span>
+          <span style="padding:0 5px">UP</span><span style="padding:0 5px;text-align:right">230ms</span>
+        </div>
+      
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 44px 50px;align-items:center;font-family:'VT323',monospace;font-size:17px;line-height:1.3;color:#d0d0d0">
+          <span style="padding:0 5px;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden"><span style="width:7px;height:7px;flex:none;background:#e8e8e8"></span>npm</span>
+          <span style="padding:0 5px">UP</span><span style="padding:0 5px;text-align:right">12ms</span>
+        </div>
+      
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 44px 50px;align-items:center;font-family:'VT323',monospace;font-size:17px;line-height:1.3;color:#d0d0d0">
+          <span style="padding:0 5px;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden"><span style="width:7px;height:7px;flex:none;background:#e8e8e8"></span>postgres</span>
+          <span style="padding:0 5px">UP</span><span style="padding:0 5px;text-align:right">3ms</span>
+        </div>
+      
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 44px 50px;align-items:center;font-family:'VT323',monospace;font-size:17px;line-height:1.3;color:#d0d0d0">
+          <span style="padding:0 5px;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden"><span style="width:7px;height:7px;flex:none;background:#e8e8e8"></span>obilhete.pt</span>
+          <span style="padding:0 5px">UP</span><span style="padding:0 5px;text-align:right">88ms</span>
+        </div>
+      
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 44px 50px;align-items:center;font-family:'VT323',monospace;font-size:17px;line-height:1.3;color:#ff5a4a">
+          <span style="padding:0 5px;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden"><span style="width:7px;height:7px;flex:none;background:#d02a1e"></span>noticias-pt.me</span>
+          <span style="padding:0 5px">DOWN</span><span style="padding:0 5px;text-align:right">—</span>
+        </div>
+      
+    </div>
+  </div>
+
+  <div style="position:absolute;left:1004px;top:298px;width:260px;height:196px;box-sizing:border-box;display:flex;flex-direction:column;background:#d4d0c8;border:1px solid;border-color:#d4d0c8 #404040 #404040 #d4d0c8;box-shadow:inset 1px 1px 0 #fff,inset -1px -1px 0 #808080,2px 2px 0 rgba(0,0,0,0.4);padding:3px">
+    <div style="height:18px;flex:none;display:flex;align-items:center;gap:5px;padding:0 3px;background:linear-gradient(90deg,#808080,#b5b5b5);color:#e6e3dc;font-weight:bold"><span style="width:12px;height:12px;background:#fff;border:1px solid #808080;box-sizing:border-box"></span><span>README.TXT - Notepad</span></div>
+    <div style="flex:1;min-height:0;margin-top:3px;background:#fff;border:1px solid;border-color:#808080 #fff #fff #808080;box-shadow:inset 1px 1px 0 #404040;padding:4px 6px;font-family:'VT323',monospace;font-size:17px;line-height:1.1;white-space:pre-wrap;color:#000">vault
+=====
+old lenovo mini-pc in my attic, portugal.
+runs obilhete.pt and noticias-pt.me.
+
+this page only watches it.
+it can't restart or touch anything.
+
+summer afternoons are the bad part.</div>
+  </div>
+
+  <div style="position:absolute;left:900px;top:540px;width:364px;height:246px;box-sizing:border-box;display:flex;flex-direction:column;background:#d4d0c8;border:1px solid;border-color:#d4d0c8 #404040 #404040 #d4d0c8;box-shadow:inset 1px 1px 0 #fff,inset -1px -1px 0 #808080,2px 2px 0 rgba(0,0,0,0.4);padding:3px">
+    <div style="height:18px;flex:none;display:flex;align-items:center;gap:5px;padding:0 3px;background:linear-gradient(90deg,#23262f,#7d8396);color:#fff;font-weight:bold"><span style="width:12px;height:12px;background:#000;border:1px solid #fff;box-sizing:border-box"></span><span>cmd.exe · vault --tail</span></div>
+    <div style="flex:1;min-height:0;margin-top:3px;background:#000;border:1px solid;border-color:#808080 #fff #fff #808080;padding:4px 7px;display:flex;flex-direction:column;font-family:'VT323',monospace;font-size:18px;line-height:1.08;color:#c0c0c0">
+      <div style="flex:none;margin-bottom:4px">C:\VAULT&gt; tail -f events.log</div>
+      <div style="flex:1;min-height:0"><div style="width:100%;height:100%"><vault-console scenario="degraded" rows="12" motion="full"></vault-console></div></div>
+    </div>
+  </div>
+
+  <div style="position:absolute;inset:0;pointer-events:none;z-index:10"><vault-crt strength="0.45" motion="full"></vault-crt></div>
+</div>
+<script src="vault-fx.js"></script>
+</body>
+</html>
