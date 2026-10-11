@@ -20,13 +20,15 @@ Built for **vault**, an old mini-PC in a hot attic, but nothing in it is specifi
 cp .env.example .env              # set WIFI_IFACE, optionally LATITUDE/LONGITUDE
 cp vault.example.json vault.json  # list your services
 docker build -t vault-dashboard .
-docker run -d --name vault-dashboard --env-file .env \
-  -v /proc:/host/proc:ro -v /etc/os-release:/host/os-release:ro \
+docker run -d --name vault-dashboard --env-file .env -e HOST_SYS=/host/sys \
+  -v /proc:/host/proc:ro -v /sys:/host/sys:ro -v /etc/os-release:/host/os-release:ro \
   -v "$PWD/data:/data" -v "$PWD/vault.json:/config/vault.json:ro" \
   --network <your-docker-network> -p 8080:8080 vault-dashboard
 ```
 
 The container has to share a Docker network with the services it checks by name.
+Docker hides the CPU throttle counters under a container's own `/sys`, which is why the host's
+`/sys` is mounted read-only at `/host/sys`.
 Create `data/` yourself first, owned by UID 1000.
 
 ## Configure
