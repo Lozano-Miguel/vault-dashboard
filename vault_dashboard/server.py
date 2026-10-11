@@ -1,6 +1,7 @@
 """HTTP: a GET-only JSON API plus the static frontend. Nothing here can change anything."""
 import json
 import os
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, unquote, urlsplit
 
@@ -51,6 +52,17 @@ def make_handler(cfg, sampler, store):
                 except ValueError:
                     return self._send(400, "text/plain; charset=utf-8", b"after must be an integer")
                 return self._json(store.events_after(after))
+            if url.path == "/api/history":
+                values = parse_qs(url.query).get("hours")
+                try:
+                    hours = int(values[0]) if values else 24
+                except ValueError:
+                    hours = 0
+                if not 1 <= hours <= 24 * 7:
+                    return self._send(400, "text/plain; charset=utf-8", b"hours must be 1..168")
+                now = int(time.time())
+                body = store.history(now - hours * 3600)
+                return self._json({"interval": cfg.history_interval_s, "from": now - hours * 3600, "to": now, **body})
             if url.path.startswith("/api/"):
                 return self._send(404, "text/plain; charset=utf-8", b"not found")
             self._static(url.path)

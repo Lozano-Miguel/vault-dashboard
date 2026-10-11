@@ -108,6 +108,20 @@ class Store:
                         (local_midnight(now, tz),))
         return int(row[0])
 
+    def history(self, since):
+        """Samples and per-service availability since `since`, oldest first, for the MEMORY.DAT chart."""
+        with self.lock:
+            samples = self.db.execute(
+                "SELECT ts, cpu_temp, cpu_temp_max, outside_temp FROM samples WHERE ts > ? ORDER BY ts",
+                (since,)).fetchall()
+            rows = self.db.execute(
+                "SELECT service_id, ts, up_checks, total_checks FROM service_samples WHERE ts > ? ORDER BY ts",
+                (since,)).fetchall()
+        services = {}
+        for sid, ts, up, total in rows:
+            services.setdefault(sid, []).append([ts, up, total])
+        return {"samples": [list(r) for r in samples], "services": services}
+
     def ticker(self, now, tz):
         hot = self._one(
             "SELECT cpu_temp_max, ts FROM samples WHERE ts > ? AND cpu_temp_max IS NOT NULL "

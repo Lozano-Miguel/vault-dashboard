@@ -1,5 +1,6 @@
 import json
 import threading
+import time
 import unittest
 import urllib.error
 import urllib.request
@@ -61,6 +62,20 @@ class ServerTest(unittest.TestCase):
         self.assertEqual([e["text"] for e in json.loads(self.get("/api/events")[2])], ["e0", "e1", "e2"])
         self.assertEqual([e["text"] for e in json.loads(self.get("/api/events?after=2")[2])], ["e2"])
         self.assertEqual(self.get("/api/events?after=abc")[0], 400)
+
+    def test_history(self):
+        now = int(time.time())
+        self.store.write_sample(now - 600, {"cpu_temp": 55.0, "cpu_temp_max": 56.0, "throttle_delta": 0},
+                                {"app": {"up_checks": 20, "total_checks": 20, "avg_ms": 40}})
+        self.store.write_sample(now - 30 * 3600, {"cpu_temp": 40.0, "throttle_delta": 0}, {})
+        h = json.loads(self.get("/api/history")[2])
+        self.assertEqual(h["interval"], 300)
+        self.assertAlmostEqual(h["to"] - h["from"], 24 * 3600, delta=2)
+        self.assertEqual(h["samples"], [[now - 600, 55.0, 56.0, None]])
+        self.assertEqual(h["services"], {"app": [[now - 600, 20, 20]]})
+        self.assertEqual(len(json.loads(self.get("/api/history?hours=48")[2])["samples"]), 2)
+        for bad in ("abc", "0", "1000"):
+            self.assertEqual(self.get(f"/api/history?hours={bad}")[0], 400, bad)
 
     def test_static(self):
         code, headers, body = self.get("/")

@@ -68,6 +68,19 @@ class StoreTest(unittest.TestCase):
         self.assertEqual(self.store.ticker(NOON, TZ)["recording_since"], new)
         self.assertEqual([e["ts"] for e in self.store.events_after(None)], [new])
 
+    def test_history_since(self):
+        self.store.write_sample(NOON - 7200, sample(cpu_temp=50.0, cpu_temp_max=51.0, outside_temp=20.0),
+                                {"app": {"up_checks": 20, "total_checks": 20, "avg_ms": 40}})  # too old
+        self.store.write_sample(NOON - 600, sample(cpu_temp=60.0, cpu_temp_max=63.5, outside_temp=24.0),
+                                {"app": {"up_checks": 20, "total_checks": 20, "avg_ms": 40},
+                                 "db": {"up_checks": 18, "total_checks": 20, "avg_ms": 3}})
+        self.store.write_sample(NOON - 300, sample(cpu_temp=61.0, cpu_temp_max=62.0),
+                                {"app": {"up_checks": 0, "total_checks": 20, "avg_ms": None}})
+        h = self.store.history(NOON - 3600)
+        self.assertEqual(h["samples"], [[NOON - 600, 60.0, 63.5, 24.0], [NOON - 300, 61.0, 62.0, None]])
+        self.assertEqual(h["services"], {"app": [[NOON - 600, 20, 20], [NOON - 300, 0, 20]],
+                                         "db": [[NOON - 600, 18, 20]]})
+
     def test_local_midnight_on_dst_day(self):
         # 2026-10-25: Lisbon falls back from WEST (+1) to WET (+0) at 02:00
         tz = ZoneInfo(TZ)
