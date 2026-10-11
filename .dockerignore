@@ -1,0 +1,10 @@
+.git
+.superpowers
+design
+docs
+tests
+node_modules
+test-results
+data
+.env
+vault.json
