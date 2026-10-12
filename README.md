@@ -10,6 +10,19 @@ to red as the machine heats up.
 
 Built for **vault**, an old mini-PC in a hot attic, but nothing in it is specific to vault.
 
+## On screen
+
+- **The ophanim:** one eye per service; the centre eye is the server itself. It follows your cursor.
+- **THERMAL.SYS:** CPU temperature, outside temperature (Open-Meteo) and the gap between them, plus thermal throttling.
+- **SYSTEM.EXE:** CPU, memory, disk, Wi-Fi signal, traffic and uptime.
+- **WIRED.LNK:** the network as a tree (host → docker → network → containers → public sites) with response times. A dead container darkens the sites behind it.
+- **root@vault: ~** a neofetch-style panel, with Lain drawn as pixel art from braille text.
+- **TOP.EXE:** the busiest processes, Task Manager style.
+- **MEMORY.DAT:** the last 24 hours: a temperature curve and a strip per service showing when it was down.
+- **The ticker:** today's records, uptime this week, the last outage, and a few lines from the Wired.
+
+It fills 16:9 screens edge to edge. Type `lain` for the easter egg.
+
 - **Watches, never touches:** GET-only API, read-only mounts, no Docker socket.
 - **Tiny:** Python standard library only, no runtime dependencies. Plain JS frontend, no build step.
 - **Remembers:** samples every 5 minutes into SQLite and keeps 6 months.
